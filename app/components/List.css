@@ -1,0 +1,15 @@
+.row:hover {
+    background-color: blanchedalmond;
+}
+
+.row {
+    height: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+}
+
+.row:focus {
+    background-color: burlywood;
+}

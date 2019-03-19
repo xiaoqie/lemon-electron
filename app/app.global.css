@@ -1,0 +1,59 @@
+/*
+ * @NOTE: Prepend a `~` to css file paths that are in your node_modules
+ *        See https://github.com/webpack-contrib/sass-loader#imports
+ */
+
+/* @import "~@fortawesome/fontawesome-free/css/all.css";
+ */
+html {
+    font-family: 'Roboto', sans-serif;
+}
+div {
+    font-size: 16px;
+}
+.material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+
+    /* font-size: 24px;  !* Preferred icon size *! */
+    display: inline-block;
+    line-height: inherit;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+
+    /* Support for all WebKit browsers. */
+    -webkit-font-smoothing: antialiased;
+
+    /* Support for Safari and Chrome. */
+    text-rendering: optimizeLegibility;
+
+    /* Support for Firefox. */
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Support for IE. */
+    font-feature-settings: 'liga';
+
+    /* customized */
+    vertical-align: middle;
+    font-size: 16px;
+    padding-bottom: 2px;
+}
+
+
+:not(input):not(textarea),
+:not(input):not(textarea)::after,
+:not(input):not(textarea)::before {
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default;
+}
+input, button, textarea, :focus {
+    outline: none; // You should add some other style for :focus to help UX/a11y
+}
+body {
+    margin: 0;
+}
