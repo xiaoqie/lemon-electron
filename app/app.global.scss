@@ -3,14 +3,30 @@
  *        See https://github.com/webpack-contrib/sass-loader#imports
  */
 
-/* @import "~@fortawesome/fontawesome-free/css/all.css";
- */
+@import "constants/constants";
+
+
 html {
     font-family: 'Roboto', sans-serif;
 }
 div {
-    font-size: 16px;
+    font-size: $fontSize;
 }
+:not(input):not(textarea),
+:not(input):not(textarea)::after,
+:not(input):not(textarea)::before {
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default;
+}
+
+input, button, textarea, :focus {
+    outline: none; /* You should add some other style for :focus to help UX/a11y */
+}
+body {
+    margin: 0;
+}
+
 .material-icons {
     font-family: 'Material Icons';
     font-weight: normal;
@@ -18,7 +34,7 @@ div {
 
     /* font-size: 24px;  !* Preferred icon size *! */
     display: inline-block;
-    line-height: inherit;
+    line-height: $lineHeight;
     text-transform: none;
     letter-spacing: normal;
     word-wrap: normal;
@@ -39,21 +55,7 @@ div {
 
     /* customized */
     vertical-align: middle;
-    font-size: 16px;
-    padding-bottom: 2px;
-}
-
-
-:not(input):not(textarea),
-:not(input):not(textarea)::after,
-:not(input):not(textarea)::before {
-    -webkit-user-select: none;
-    user-select: none;
-    cursor: default;
-}
-input, button, textarea, :focus {
-    outline: none; // You should add some other style for :focus to help UX/a11y
-}
-body {
-    margin: 0;
+    font-size: 20px;
+    padding-left: ($arrowSize - 20px)/2 + ($lineHeight - $iconSize)/2;
+    padding-right: ($arrowSize - 20px)/2 - ($lineHeight - $iconSize)/2;
 }

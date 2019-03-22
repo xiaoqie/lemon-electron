@@ -1,0 +1,97 @@
+@import "../constants/constants.scss";
+
+:export {
+    arrowSize: $arrowSize;
+}
+
+.bigRow {
+    &:hover {
+        /*background-color: blanchedalmond;*/
+    }
+    &:focus {
+        background-color: lightskyblue;
+    }
+}
+
+.row {
+    height: 32px;
+    width: 100%;
+    white-space: nowrap;
+
+}
+
+
+.icon {
+    width: $iconSize;
+    height: $iconSize;
+    padding: ($lineHeight - $iconSize) / 2;
+    vertical-align: middle;
+}
+
+.inline-left {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    vertical-align: middle;
+    height: 100%;
+    line-height: 32px
+}
+
+.inline-right {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    vertical-align: middle;
+    height: 100%;
+    line-height: 32px;
+    text-align: right;
+}
+
+%handle {
+    width: 10px;
+    padding: 0;
+    cursor: ew-resize;
+    flex-shrink: 0;
+    right: -5px;
+    transform: translateX(5px);
+
+    &::before {
+        cursor: ew-resize;
+        content: '';
+        display: block;
+        flex-shrink: 0;
+        width: 1px;
+        height: 100%;
+        background: black;
+        margin: 0 auto;
+    }
+}
+
+%column {
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    white-space: nowrap;
+    vertical-align: middle;
+    height: 100%;
+    line-height: 32px;
+}
+
+.columnText {
+    transform: translateX(5px);
+    overflow: hidden;
+    width: 100%;
+}
+
+.headerColumn {
+    @extend %column;
+}
+
+.headerHandle {
+    @extend %handle;
+}
+
+.columnSeparator {
+    @extend %handle;
+}
+

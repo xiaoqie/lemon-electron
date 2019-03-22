@@ -2,9 +2,19 @@
 import React, {Component} from 'react';
 import {Link} from 'react-router-dom';
 import {spawn} from 'child_process';
-import styles from './List.css';
+import styles from './List.scss';
 import routes from '../constants/routes';
 import ListItem from "./ListItem";
+import {getDisplayName} from "../utils/name";
+
+
+function stringCompare(a: string, b: string): number {
+    a = a.toLowerCase();
+    b = b.toLowerCase();
+    if (a === b) return 0;
+    if (a > b) return -1;
+    if (a < b) return 1;
+}
 
 export default class List extends Component<Props> {
     props: Props;
@@ -18,6 +28,12 @@ export default class List extends Component<Props> {
         let pid = Object.keys(items);
         switch (sort) {
             case "name":
+                pid = Object.keys(items).sort((pid1, pid2) =>
+                    (reverseOrder ? -1 : 1) * stringCompare(getDisplayName(items[pid1]), getDisplayName(items[pid2])));
+                break;
+            case "pid":
+                pid = Object.keys(items).sort((pid1, pid2) =>
+                    (reverseOrder ? -1 : 1) * (pid2 - pid1));
                 break;
             case "cpu":
                 pid = Object.keys(items).sort((pid1, pid2) =>
