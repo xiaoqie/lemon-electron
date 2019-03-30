@@ -20,12 +20,16 @@ export default class List extends Component<Props> {
     props: Props;
 
     render() {
-        const {items, depth, layout, config} = this.props;
-        const {sort, reverseOrder} = config;
+        const {items, depth, config} = this.props;
+        const {layout, reverseOrder} = config;
+        let {sort} = config;
         if (Object.keys(items).length === 0) {
             return null;
         }
         let pid = Object.keys(items);
+        if (items[Object.keys(items)[0]].type === 'group') {
+            sort = 'none';
+        }
         switch (sort) {
             case "name":
                 pid = Object.keys(items).sort((pid1, pid2) =>
@@ -63,7 +67,7 @@ export default class List extends Component<Props> {
                 break;
         }
         return pid.map((pid) => (
-            <ListItem key={pid} pid={pid} item={items[pid]} depth={depth} layout={layout} config={config}/>
+            <ListItem key={pid} pid={pid} item={items[pid]} depth={depth} config={config}/>
         ));
     }
 }

@@ -11,6 +11,9 @@
   },
   "rules": {
     "no-restricted-syntax": "off",
+    "no-unused-expressions": "off",
+    "camelcase": "off",
+    "object-shorthand": "off",
     "arrow-parens": ["off"],
     "compat/compat": "error",
     "consistent-return": "off",

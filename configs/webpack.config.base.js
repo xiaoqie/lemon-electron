@@ -24,6 +24,12 @@ export default {
     ]
   },
 
+  target: 'node',
+  node: {
+    __dirname: false,
+    __filename: false,
+  },
+
   output: {
     path: path.join(__dirname, '..', 'app'),
     // https://github.com/webpack/webpack/issues/1114

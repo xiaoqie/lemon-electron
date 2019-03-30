@@ -1,25 +1,80 @@
 @import "../constants/constants.scss";
-
+$handleWidth: 10px;
+$headerHeight: 64px;
+$columnPadding: 4px;
 :export {
     arrowSize: $arrowSize;
+    lineHeight: $lineHeight;
+    handleWidth: $handleWidth;
+    columnPadding: $columnPadding;
+}
+
+%material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+
+    /* font-size: 24px;  !* Preferred icon size *! */
+    display: inline-block;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+
+    /* Support for all WebKit browsers. */
+    -webkit-font-smoothing: antialiased;
+
+    /* Support for Safari and Chrome. */
+    text-rendering: optimizeLegibility;
+}
+
+.dropDownArrow {
+    @extend %material-icons;
+
+    vertical-align: middle !important;
+    font-size: 20px !important;
+    line-height: $lineHeight !important;
+    padding-left: ($arrowSize - 20px)/2 + ($lineHeight - $iconSize)/4 !important;
+    padding-right: ($arrowSize - 20px)/2 - ($lineHeight - $iconSize)/4 !important;
+    color: gray;
+
+    &:hover {
+        color: black;
+    }
 }
 
 .bigRow {
-    &:hover {
-        /*background-color: blanchedalmond;*/
-    }
     &:focus {
         background-color: lightskyblue;
     }
 }
 
 .row {
-    height: 32px;
+    height: $lineHeight;
     width: 100%;
     white-space: nowrap;
 
+    &:hover {
+        //background-color: lightgray;
+    }
 }
 
+.listHeader {
+    position: fixed;
+    top: 0;
+    height: $headerHeight;
+    width: 100%;
+    white-space: nowrap;
+    z-index: 9999;
+    background: white;
+
+    border-bottom: lightgray 1px solid;
+}
+
+.listHeaderPlaceholder {
+    padding-bottom: $headerHeight;
+}
 
 .icon {
     width: $iconSize;
@@ -28,70 +83,131 @@
     vertical-align: middle;
 }
 
-.inline-left {
+%inline {
     display: inline-block;
     overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
     vertical-align: middle;
     height: 100%;
-    line-height: 32px
+    line-height: $lineHeight
 }
 
-.inline-right {
-    display: inline-block;
-    overflow: hidden;
-    white-space: nowrap;
-    vertical-align: middle;
-    height: 100%;
-    line-height: 32px;
+.inlineLeft {
+    @extend %inline;
+}
+
+.inlineRight {
+    @extend %inline;
+
     text-align: right;
 }
 
-%handle {
-    width: 10px;
-    padding: 0;
-    cursor: ew-resize;
-    flex-shrink: 0;
-    right: -5px;
-    transform: translateX(5px);
-
-    &::before {
-        cursor: ew-resize;
-        content: '';
-        display: block;
-        flex-shrink: 0;
-        width: 1px;
-        height: 100%;
-        background: black;
-        margin: 0 auto;
-    }
-}
 
 %column {
-    display: inline-flex;
-    flex-direction: row;
-    justify-content: flex-end;
+    display: inline-grid;
+    grid-template-columns: 100%;
     white-space: nowrap;
     vertical-align: middle;
     height: 100%;
-    line-height: 32px;
+    line-height: $lineHeight;
+
+    .content {
+        //transform: translateX($handleWidth/2);
+        padding-left: $columnPadding;
+        padding-right: $columnPadding;
+        grid-column: 1/2;
+        grid-row: 1/2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        //width: calc(100% + 10px);
+    }
+
+    .separator {
+        justify-self: end;
+        grid-column: 1/2;
+        grid-row: 1/2;
+        width: $handleWidth;
+        padding: 0;
+        flex-shrink: 0;
+        right: -$handleWidth / 2;
+        transform: translateX(5px);
+
+        &::before {
+            content: '';
+            display: block;
+            flex-shrink: 0;
+            width: 1px;
+            height: 100%;
+            background: lightgray;
+            margin: 0 auto;
+        }
+    }
 }
 
-.columnText {
-    transform: translateX(5px);
-    overflow: hidden;
-    width: 100%;
+.column {
+    @extend %column;
 }
 
 .headerColumn {
     @extend %column;
-}
 
-.headerHandle {
-    @extend %handle;
-}
+    width: inherit;
 
-.columnSeparator {
-    @extend %handle;
+    .content {
+        display: grid;
+        overflow: hidden;
+        grid-template-rows: 5fr 3fr;
+        grid-template-columns: 100%;
+
+        .title {
+            grid-row: 2 / 3;
+            display: grid;
+            grid-template-columns: $lineHeight / 4 * 3 minmax(0, 1fr);
+            line-height: $lineHeight / 4 * 3;
+            height: $lineHeight / 4 * 3;
+            vertical-align: middle;
+            width: 100%;
+
+            .sortArrow {
+                @extend %material-icons;
+
+                grid-column: 1 / 2;
+                vertical-align: middle !important;
+                font-size: $lineHeight / 4 * 3 !important;
+                line-height: $lineHeight / 4 * 3 !important;
+            }
+            .text {
+                grid-column: 2 / 3;
+                display: inline-block;
+                font-size: $lineHeight / 6 * 3;
+                line-height: $lineHeight / 4 * 3;
+                height: $lineHeight / 4 * 3;
+                width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                vertical-align: middle;
+            }
+
+            &:not([left]) {
+                text-align: right;
+            }
+        }
+
+        .indicator {
+            grid-row: 1 / 2;
+            font-size: $fontSize / 4 * 5;
+            line-height: $lineHeight / 4 * 5;
+            text-align: right;
+        }
+    }
+
+    .separator {
+        cursor: ew-resize;
+
+        &::before {
+            cursor: ew-resize;
+        }
+    }
 }
 

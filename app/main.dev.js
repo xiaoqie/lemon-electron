@@ -69,11 +69,11 @@ app.on('ready', async () => {
     }
 
     mainWindow = new BrowserWindow({
+        icon: `${__dirname}/dist/icons/64x64.png`,
         show: false,
         width: 1024,
         height: 728
     });
-
     mainWindow.loadURL(`file://${__dirname}/app.html`);
 
     // @TODO: Use 'ready-to-show' event
@@ -96,6 +96,7 @@ app.on('ready', async () => {
 
     const menuBuilder = new MenuBuilder(mainWindow);
     menuBuilder.buildMenu();
+    mainWindow.webContents.openDevTools()
 
     // Remove this if your app does not use auto updates
     // eslint-disable-next-line

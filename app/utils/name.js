@@ -1,9 +1,20 @@
 import path from 'path';
-import {isShell} from "./shell";
 
+export function isShell(p) {
+    const shells = ["sh",
+        "bash",
+        "rbash",
+        "dash",
+        "zsh"];
+    return shells.includes(p);
+}
 
-function getDisplayNameByCmdline(cmdline) {
-    const exec = path.basename(cmdline.split(' ')[0]);
+export function parseCommand(cmdline) {
+    return cmdline.split(' ');
+}
+
+export function distillCmdline(cmdline) {
+    const exec = path.basename(parseCommand(cmdline)[0]);
     if (isShell(exec)) {
         const args = cmdline.split(' ');
         args.shift();
@@ -14,7 +25,7 @@ function getDisplayNameByCmdline(cmdline) {
                 break;
             }
         }
-        return getDisplayName({cmdline: args.join(' '), comm: ''});
+        return distillCmdline(args.join(' '));
     }
     if (['env', 'cross-env'].includes(exec)) {
         const args = cmdline.split(' ');
@@ -33,31 +44,40 @@ function getDisplayNameByCmdline(cmdline) {
                 break;
             }
         }
-        return getDisplayName({cmdline: args.join(' '), comm: ''});
+        return distillCmdline(args.join(' '));
     }
     return exec;
 }
 
-export function getDisplayName(proc) {
-    let fromCmdline;
-    let fromComm;
-    let displayName;
-    if (proc.cmdline) {
-        fromCmdline = getDisplayNameByCmdline(proc.cmdline);
-    }
+export function parseComm(comm) {
+    if (!comm) return "";
+
     let start = 0;
-    let end = proc.comm.length;
-    if (proc.comm.startsWith('(')) {
+    let end = comm.length;
+    if (comm.startsWith('(')) {
         start += 1;
     }
-    if (proc.comm.endsWith(')')) {
+    if (comm.endsWith(')')) {
         end -= 1;
     }
-    fromComm = proc.comm.substring(start, end);
+    return comm.substring(start, end);
+}
+
+export function getDisplayName(proc) {
+    let fromCmdline;
+    const fromComm = parseComm(proc.comm);
+    let displayName;
+    if (proc.cmdline) {
+        fromCmdline = distillCmdline(proc.cmdline);
+    }
     if (fromCmdline && fromCmdline.includes(fromComm)) {
         displayName = fromCmdline;
     } else {
         displayName = fromComm;
     }
     return displayName;
+}
+
+export function procUniqueID(proc) {
+    return proc.pid + proc.comm + proc.cmdline;
 }
