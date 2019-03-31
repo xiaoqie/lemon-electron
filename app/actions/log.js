@@ -25,9 +25,12 @@ function flatten(obj) {
 }
 
 function process(log) {
-    let {sys, processes, systemd_units, users, shells} = log;
+    const {sys, processes, users, shells, lsblk} = log;
+    let {systemd_units} = log;
+
     const elements = ['name', 'description', 'load', 'active', 'sub', 'following', 'objectPath', 'queued', 'jobType', 'jobObjectPath'];
     systemd_units = Object.assign(...systemd_units.map(u => ({[u[0]]: Object.assign(...u.map((v, i) => ({[elements[i]]: v})))})));
+
     // evaluate information, make process tree
     for (const pid in processes) if (Object.prototype.hasOwnProperty.call(processes, pid)) {
         const p = processes[pid];
@@ -119,6 +122,7 @@ function process(log) {
         if (p.isGenesis && p.service && p.type !== "gui" && p.type !== "terminal") {
             if (!(p.service in processes)) {
                 const dummyProc = processLog();
+                dummyProc.pid = p.service;
                 dummyProc.cmdline = p.service;
                 if (systemd_units[p.service])
                     dummyProc.comm = systemd_units[p.service].description;
@@ -171,14 +175,17 @@ function process(log) {
     processes.gui = processLog();
     processes.gui.cmdline = 'Applications';
     processes.gui.type = 'group';
+    processes.gui.pid = 'gui';
 
     processes.terminal = processLog();
     processes.terminal.cmdline = 'Terminals';
     processes.terminal.type = 'group';
+    processes.terminal.pid = 'terminal';
 
     processes.service = processLog();
     processes.service.cmdline = 'Services';
     processes.service.type = 'group';
+    processes.service.pid = 'service';
     for (const pid in processes) if (Object.prototype.hasOwnProperty.call(processes, pid)) {
         const p = processes[pid];
         if (p.isGenesis && p.type !== 'group') {
@@ -205,12 +212,31 @@ function process(log) {
             delete processes[pid];
         }
     }
-    return {sys, processes, systemd_units, users, shells};
+
+    const parentsChildrenDict = {};
+    const retrieveChildren = (obj) => {
+        const result = [...Object.keys(obj.children), ...Object.values(obj.children).reduce((acc, val) => ([...acc, ...retrieveChildren(val)]), [])];
+        if (!parentsChildrenDict[obj.pid]) {
+            parentsChildrenDict[obj.pid] = {children: [], parents: []};
+        }
+        parentsChildrenDict[obj.pid.toString()].children = result;
+        return result;
+    };
+    for (const pid in processes) {
+        retrieveChildren(processes[pid]);
+    }
+    for (const pid in parentsChildrenDict) {
+        for (const cpid of parentsChildrenDict[pid].children) {
+            parentsChildrenDict[cpid].parents.push(pid);
+        }
+    }
+
+    return {sys, processes, systemd_units, users, shells, lsblk, parentsChildrenDict};
 }
 
 export const receiveLog = log => dispatch => {
     dispatch({
         type: RECEIVE_LOG,
-        payload: process(log)
+        payload: Object.keys(log).length !== 0 ? process(log) : {}
     });
 };

@@ -6,13 +6,9 @@ import List from './List'
 import * as gnome from "../utils/gnome";
 import * as path from 'path';
 import {getDisplayName} from "../utils/name";
-
-function formatBytes(bytes, digits) {
-    // if (bytes < 1024) return bytes + " Bytes";
-    if (bytes < 1048576) return (bytes / 1024).toFixed(digits) + " KiB";
-    if (bytes < 1073741824) return (bytes / 1048576).toFixed(digits) + " MiB";
-    return (bytes / 1073741824).toFixed(digits) + " GiB";
-}
+import {connect} from "react-redux";
+import {listSelect} from "../actions/list";
+import {calcIntensity, formatBytes} from "../utils";
 
 class ListColumn extends Component<Props> {
     props: Props;
@@ -30,7 +26,7 @@ class ListColumn extends Component<Props> {
 
     render() {
         const {width, children, right} = this.props;
-        let {intensity} = this.props;
+        const {intensity} = this.props;
         return (
             <div className={styles.column}
                  style={{
@@ -38,7 +34,7 @@ class ListColumn extends Component<Props> {
                      textAlign: right ? 'right' : 'left',
                      backgroundColor: do {
                          if (intensity) {
-                             `rgba(${[255, 255 * (1-intensity), 255 * (1-intensity), 0.3].join(',')})`
+                             `rgba(${[255, 255 * (1 - intensity), 255 * (1 - intensity), 0.3].join(',')})`
                          } else {
                              'rgba(255, 255, 255, 0)'
                          }
@@ -54,7 +50,7 @@ class ListColumn extends Component<Props> {
     }
 }
 
-export default class ListItem extends Component<Props> {
+class ListItem extends Component<Props> {
     props: Props;
 
     constructor(props) {
@@ -69,17 +65,19 @@ export default class ListItem extends Component<Props> {
 
     shouldComponentUpdate(nextProps, nextState) {
         // FIXME: uncollapse an item doesn't rerender items below
-        if (!this.renderedLastTime && this.inSight()) {
+/*        if (!this.renderedLastTime && this.inSight()) {
             return true;
         }
         if (!this.inSight()) {
             this.renderedLastTime = false;
             return false;
-        }
+        }*/
 
-        const {item, layout, config} = this.props;
-        const {collapsed} = this.state;
-        const result = deepEqual(item, nextProps.item) && deepEqual(layout, nextProps.layout) && deepEqual(config, nextProps.config) && collapsed === nextState.collapsed;
+        const result = (
+            deepEqual(this.props.list, nextProps.list) &&
+            deepEqual(this.props.item, nextProps.item) &&
+            this.state.collapsed === nextState.collapsed
+        );
         return !result;
     }
 
@@ -104,9 +102,30 @@ export default class ListItem extends Component<Props> {
         return render;
     }
 
+    isChildOf(pid) {
+        const {item, log} = this.props;
+        const {parentsChildrenDict} = log;
+        if (pid && parentsChildrenDict[item.pid.toString()].parents.includes(pid.toString())) {
+            return true;
+        }
+        return false;
+    }
+
+    isParentOf(pid) {
+        const {item, log} = this.props;
+        const {parentsChildrenDict} = log;
+        if (parentsChildrenDict[pid.toString()] && parentsChildrenDict[pid.toString()].parents.includes(item.pid.toString())) {
+            return true;
+        }
+        return false;
+    }
+
     render() {
-        const {pid, item, depth, config} = this.props;
-        const {layout} = config;
+        const {item, depth} = this.props;
+        const {list} = this.props;
+        const {layout} = list;
+        const {listSelect} = this.props;
+
         const {collapsed} = this.state;
         const selectable = item.type !== 'group';
         const collapsable = Object.keys(item.children).length !== 0 && item.type !== 'group';
@@ -121,15 +140,11 @@ export default class ListItem extends Component<Props> {
         if (render) {
             for (const {col, width} of layout) {
                 const pad = depth * parseInt(styles.arrowSize);
-                const emptyColumn = <ListColumn key={`${pid}_${col}`} right width={width}/>;
                 switch (col) {
                     case "name":
                         rowContent.push(
-                            <ListColumn key={`${pid}_${col}`} width={width}>
-                                <div style={{
-                                    display: 'flex',
-                                    paddingLeft: `${pad}px`,
-                                }}>
+                            <ListColumn key={`${item.pid}_${col}`} width={width}>
+                                <div style={{display: 'flex', paddingLeft: `${pad}px`}}>
                                     {do {
                                         if (collapsable) {
                                             <i className={styles.dropDownArrow} onClick={this.collapseHandler}>
@@ -149,58 +164,96 @@ export default class ListItem extends Component<Props> {
                         );
                         break;
                     case "pid":
-                        if (noInfo) rowContent.push(emptyColumn);
-                        else rowContent.push(
-                            <ListColumn key={`${pid}_${col}`} right width={width}>
+                        rowContent.push(
+                            <ListColumn key={`${item.pid}_${col}`} right width={width}>
                                 {do {
-                                    if (!isDummy) {
-                                        pid;
+                                    if (noInfo) {
+                                        '';
+                                    } else if (!isDummy) {
+                                        item.pid;
                                     } else {
-                                        '-';
+                                        '';
                                     }
                                 }}
                             </ListColumn>);
                         break;
                     case "cpu":
-                        if (noInfo) rowContent.push(emptyColumn);
-                        else rowContent.push(
-                            <ListColumn key={`${pid}_${col}`} right width={width} intensity={Math.tanh(item.cpu_usage / 4 * 2)}>
-                                {(item.cpu_usage / 4 * 100.0).toFixed(0)}%
+                        rowContent.push(
+                            <ListColumn key={`${item.pid}_${col}`} right width={width}
+                                        intensity={calcIntensity(item.cpu_usage / 4, 0.8)}>
+                                {do {
+                                    if (noInfo) {
+                                        '';
+                                    } else {
+                                        `${(item.cpu_usage / 4 * 100.0).toFixed(0)}%`;
+                                    }
+                                }}
                             </ListColumn>);
                         break;
                     case "mem":
-                        if (noInfo) rowContent.push(emptyColumn);
-                        else rowContent.push(
-                            <ListColumn key={`${pid}_${col}`} right width={width} intensity={Math.tanh(item.mem / 1024 / 1024 / 1024 * 2)}>
-                                {formatBytes(item.mem, 1)}
+                        rowContent.push(
+                            <ListColumn key={`${item.pid}_${col}`} right width={width}
+                                        intensity={calcIntensity(item.mem, 4 * 1024 * 1024 * 1024)}>
+                                {do {
+                                    if (noInfo) {
+                                        '';
+                                    } else {
+                                        formatBytes(item.mem, 1)
+                                    }
+                                }}
                             </ListColumn>);
                         break;
                     case "disk":
-                        if (noInfo) rowContent.push(emptyColumn);
-                        else rowContent.push(
-                            <ListColumn key={`${pid}_${col}`} right width={width} intensity={Math.tanh(item.disk_total / 1024 / 10)}>
-                                {formatBytes(item.disk_total * 1024, 1)}/s
+                        rowContent.push(
+                            <ListColumn key={`${item.pid}_${col}`} right width={width}
+                                        intensity={calcIntensity(item.disk_total, 10 * 1024)}>
+                                {do {
+                                    if (noInfo) {
+                                        '';
+                                    } else {
+                                        `${formatBytes(item.disk_total * 1024, 1)}/s`
+                                    }
+                                }}
                             </ListColumn>);
                         break;
                     case "net":
-                        if (noInfo) rowContent.push(emptyColumn);
-                        else rowContent.push(
-                            <ListColumn key={`${pid}_${col}`} right width={width} intensity={Math.tanh(item.net_total / 1024)}>
-                                {formatBytes(item.net_total * 1024, 1)}/s
+                        rowContent.push(
+                            <ListColumn key={`${item.pid}_${col}`} right width={width}
+                                        intensity={calcIntensity(item.net_total, 2 * 1024)}>
+                                {do {
+                                    if (noInfo) {
+                                        '';
+                                    } else {
+                                        `${formatBytes(item.net_total * 1024, 1)}/s`
+                                    }
+                                }}
                             </ListColumn>);
                         break;
                     case "gpu-usage":
-                        if (noInfo) rowContent.push(emptyColumn);
-                        else rowContent.push(
-                            <ListColumn key={`${pid}_${col}`} right width={width} intensity={Math.tanh(item.gpu_usage_total / 100 * 2)}>
-                                {(item.gpu_usage_total).toFixed(0)}% {/* item.nv_type */}
+                        rowContent.push(
+                            <ListColumn key={`${item.pid}_${col}`} right width={width}
+                                        intensity={calcIntensity(item.gpu_usage_total, 80)}>
+                                {do {
+                                    if (noInfo) {
+                                        '';
+                                    } else {
+                                        `${(item.gpu_usage_total).toFixed(0)}%`
+                                        /* item.nv_type */
+                                    }
+                                }}
                             </ListColumn>);
                         break;
                     case "gpu-mem":
-                        if (noInfo) rowContent.push(emptyColumn);
-                        else rowContent.push(
-                            <ListColumn key={`${pid}_${col}`} right width={width} intensity={Math.tanh(item.gpu_memory_used / 1024)}>
-                                {formatBytes(item.gpu_memory_used * 1024 * 1024, 1)}
+                        rowContent.push(
+                            <ListColumn key={`${item.pid}_${col}`} right width={width}
+                                        intensity={calcIntensity(item.gpu_memory_used, 2 * 1024)}>
+                                {do {
+                                    if (noInfo) {
+                                        '';
+                                    } else {
+                                        formatBytes(item.gpu_memory_used * 1024 * 1024, 1)
+                                    }
+                                }}
                             </ListColumn>);
                         break;
                     default:
@@ -210,17 +263,33 @@ export default class ListItem extends Component<Props> {
         }
         return (
             <React.Fragment>
-                <div ref={this.ref} key={pid} className={styles.bigRow}
-                     tabIndex={selectable ? "-1" : "disabled"}>
+                <div ref={this.ref} key={item.pid} className={styles.bigRow}
+                     onClick={() => selectable && listSelect(item.pid)}
+                     active={do {
+                         if (item.pid === list.currentSelection && selectable) {
+                             "active"
+                         } else if (this.isChildOf(list.currentSelection)) {
+                             "semi"
+                         // } else if (this.isParentOf(list.currentSelection) && selectable) {
+                         //     "semi"
+                         } else {
+                             "inactive"
+                         }
+                     }}>
                     <div className={styles.row}>
                         {render && rowContent}
                     </div>
-                    {Object.keys(item.children).length !== 0 && !collapsed &&
-                    <List key={`${pid}_children`} depth={noIndent ? depth : depth + 1}
-                          items={item.children}
-                          config={config}/>}
                 </div>
+                {Object.keys(item.children).length !== 0 && !collapsed &&
+                <List key={`${item.pid}_children`}
+                      depth={noIndent ? depth : depth + 1}
+                      items={item.children}/>}
             </React.Fragment>
         );
     }
 }
+
+export default connect(state => ({
+    list: state.list,
+    log: state.log
+}), {listSelect})(ListItem);

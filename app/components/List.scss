@@ -46,7 +46,13 @@ $columnPadding: 4px;
 
 .bigRow {
     &:focus {
+        //background-color: lightskyblue;
+    }
+    &[active='active'] {
         background-color: lightskyblue;
+    }
+    &[active='semi'] {
+        background-color: lightblue;
     }
 }
 
@@ -61,8 +67,6 @@ $columnPadding: 4px;
 }
 
 .listHeader {
-    position: fixed;
-    top: 0;
     height: $headerHeight;
     width: 100%;
     white-space: nowrap;
@@ -70,10 +74,6 @@ $columnPadding: 4px;
     background: white;
 
     border-bottom: lightgray 1px solid;
-}
-
-.listHeaderPlaceholder {
-    padding-bottom: $headerHeight;
 }
 
 .icon {

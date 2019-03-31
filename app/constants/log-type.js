@@ -21,10 +21,14 @@ export interface SystemLog {
     nv_dec_usage: number,
     nv_enc_usage: number,
     nv_gpu_usage: number,
-    nv_mem_usage: number
+    nv_mem_usage: number,
+    diskstats: Object,
+    net_transmit_speed: number,
+    net_receive_speed: number
 }
 
 export interface ProcessLog {
+    pid: number,
     children: Object,
     cmdline: string,
     comm: string,
@@ -54,11 +58,13 @@ export interface ProcessLog {
     type: string,
     cgroup: string,
     cwd: string,
-    exe: string
+    exe: string,
+    uid: number
 }
 
 export function processLog() {
     return {
+        pid: 0,
         children: {},
         cmdline: "",
         comm: "",
@@ -87,7 +93,8 @@ export function processLog() {
         type: "",
         cgroup: "",
         exe: "",
-        cwd: ""
+        cwd: "",
+        uid: 0
     }
 }
 
