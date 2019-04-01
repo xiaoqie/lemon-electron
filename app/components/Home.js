@@ -1,17 +1,12 @@
 // @flow
 import React, {Component} from 'react';
-import {spawn} from "child_process";
-import * as path from 'path';
+import {remote} from 'electron';
 import List from "./List";
 import ListHeader from "./ListHeader";
-import {processLog} from "../constants/log-type";
-import type {Log} from "../constants/log-type";
-import { connect } from 'react-redux';
-import styles from './Home.css';
-import {theme} from '../node-gtk-theme';
-import * as nativeCSS from 'native-css';
-const converted = nativeCSS.convert(theme.css);
-console.log(theme.css);
+import {connect} from 'react-redux';
+import styles from './Home.scss';
+import {C} from "../utils";
+
 
 type Props = {};
 
@@ -48,20 +43,40 @@ class Home extends Component<Props> {
         // console.log(sys);
         // console.log(proc);
         if (!processes) {
-            return (<div>Loading...</div>);
+            return (<div>Connecting...</div>);
         }
         const headerInfo = {
             "cpu": sys.cpus.cpu / 4,
-            "mem": 1 - sys.MemAvailable/sys.MemTotal
+            "mem": 1 - sys.MemAvailable / sys.MemTotal
         };
 
         return (
-            <div className={styles.container}>
-                <div className={styles.header}>
+            <div className={C(styles.container, "treeview", "view")}>
+                <div className="titlebar header-bar">
+                    <div className="title">Lemonitor</div>
+                    <div className="titlebutton-wrapper">
+                        <span className="titlebutton button" onClick={() => remote.getCurrentWindow().minimize()}>
+                            <i className="material-icons">minimize</i>
+                        </span>
+                        <span className="titlebutton button" onClick={() => {
+                            const window = remote.getCurrentWindow();
+                            if (!window.isMaximized()) {
+                                window.maximize();
+                            } else {
+                                window.unmaximize();
+                            }
+                        }}>
+                            <i className="material-icons">fullscreen</i>
+                        </span>
+                        <span className="titlebutton button" onClick={() => remote.getCurrentWindow().close()}>
+                            <i className="material-icons">close</i>
+                        </span>
+                    </div>
+                </div>
+                <div className={C(styles.header, "header")}>
                     <ListHeader headerInfo={headerInfo}/>
                 </div>
-                <div className={styles.list}>
-                    {/*<div style={converted.close} />*/}
+                <div className={C(styles.list, "treeview")}>
                     <List depth={0} items={processes}/>
                 </div>
             </div>

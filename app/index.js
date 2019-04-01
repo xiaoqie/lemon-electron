@@ -7,6 +7,12 @@ import './app.global.scss';
 import * as websocket from './utils/websocket';
 import {receiveLog} from "./actions/log";
 
+import getTheme from './electron-gtk-theme'
+getTheme({
+    outputPath: __dirname + "/gtk-theme"
+});
+
+
 const store = configureStore({
     list: {
         sort: {col: "mem", reverse: true},

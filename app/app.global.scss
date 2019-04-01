@@ -20,17 +20,16 @@ div {
     cursor: default;
 }
 
-input, button, textarea, :focus {
+input, button, textarea, * {
     outline: none; /* You should add some other style for :focus to help UX/a11y */
 }
 body {
     margin: 0;
+    background: transparent !important;
 }
 
 *, *::after, *::before {
     -webkit-user-select: none;
     -webkit-user-drag: none;
-    -webkit-app-region: no-drag;
     cursor: default;
 }
-

@@ -37,11 +37,11 @@ $columnPadding: 4px;
     line-height: $lineHeight !important;
     padding-left: ($arrowSize - 20px)/2 + ($lineHeight - $iconSize)/4 !important;
     padding-right: ($arrowSize - 20px)/2 - ($lineHeight - $iconSize)/4 !important;
-    color: gray;
+/*    color: gray;
 
     &:hover {
         color: black;
-    }
+    }*/
 }
 
 .bigRow {
@@ -71,9 +71,8 @@ $columnPadding: 4px;
     width: 100%;
     white-space: nowrap;
     z-index: 9999;
-    background: white;
 
-    border-bottom: lightgray 1px solid;
+    //border-bottom: lightgray 1px solid;
 }
 
 .icon {
@@ -137,9 +136,9 @@ $columnPadding: 4px;
             content: '';
             display: block;
             flex-shrink: 0;
-            width: 1px;
+            //width: 1px;
             height: 100%;
-            background: lightgray;
+            //background: lightgray;
             margin: 0 auto;
         }
     }
@@ -152,7 +151,9 @@ $columnPadding: 4px;
 .headerColumn {
     @extend %column;
 
+  box-sizing: border-box;
     width: inherit;
+    padding: 0 !important;
 
     .content {
         display: grid;

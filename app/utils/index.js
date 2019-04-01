@@ -6,3 +6,7 @@ export function formatBytes(bytes, digits) {
 }
 
 export const calcIntensity = (value, max) => Math.tanh(0.1 + value / max * 2);
+
+export function C(...classNames) {
+    return classNames.join(' ');
+}

@@ -13,8 +13,9 @@
 import {app, BrowserWindow} from 'electron';
 import {autoUpdater} from 'electron-updater';
 import log from 'electron-log';
+import * as path from "path";
+import {spawn} from "child_process";
 import MenuBuilder from './menu';
-// const spawn = require("child_process").spawn;
 
 export default class AppUpdater {
     constructor() {
@@ -60,7 +61,8 @@ app.on('window-all-closed', () => {
     }
 });
 
-app.on('ready', async () => {
+
+async function createWindow() {
     if (
         process.env.NODE_ENV === 'development' ||
         process.env.DEBUG_PROD === 'true'
@@ -70,6 +72,8 @@ app.on('ready', async () => {
 
     mainWindow = new BrowserWindow({
         icon: `${__dirname}/dist/icons/64x64.png`,
+        // transparent: true,
+        frame: false,
         show: false,
         width: 1024,
         height: 728
@@ -96,10 +100,29 @@ app.on('ready', async () => {
 
     const menuBuilder = new MenuBuilder(mainWindow);
     menuBuilder.buildMenu();
-    mainWindow.webContents.openDevTools()
+    // mainWindow.webContents.openDevTools()
 
     // Remove this if your app does not use auto updates
     // eslint-disable-next-line
-    new AppUpdater();
-});
+    // new AppUpdater();
+}
 
+function _createWindowTransparent() {
+    let parent = new BrowserWindow({
+        width: 1024,
+        height: 728,
+        transparent: true,
+        frame: false
+    });
+
+    parent.once('close', () => {
+        parent = null;
+    });
+
+    parent.loadURL(`file://${__dirname}/app.html`);
+    // parent.webContents.openDevTools();
+}
+const createWindowTransparent = () => setTimeout(_createWindowTransparent, 500);
+
+app.on('ready', createWindowTransparent);
+// app.on('ready', createWindow);

@@ -4,6 +4,7 @@ import styles from './List.scss';
 import {connect} from "react-redux";
 import {listColResize, listSortClick} from "../actions/list";
 import {calcIntensity, formatBytes} from "../utils";
+import {C} from "../utils";
 
 
 class HeaderColumn extends Component<Props> {
@@ -37,18 +38,19 @@ class HeaderColumn extends Component<Props> {
         const {width, children, sortClick} = this.props;
         const {intensity} = this.props;
         return (
-            <div className={styles.headerColumn}
+            <div className={C(styles.headerColumn, "button")}
                  style={{
                      width: `${width}px`,
                      backgroundColor: do {
                          if (intensity) {
-                             `rgba(${[255, 255 * (1 - intensity), 255 * (1 - intensity), 0.3].join(',')})`
+                             // `rgba(${[255, 255 * (1 - intensity), 255 * (1 - intensity), 0.3].join(',')})`
+                             `rgba(${[255, 0, 0, intensity/3].join(',')})`
                          } else {
                              'rgba(255, 255, 255, 0)'
                          }
                      }
                  }}>
-                <div onClick={sortClick} className={styles.content}>{children}</div>
+                <div onClick={sortClick} className={C(styles.content)}>{children}</div>
                 <div ref={this.handle} className={styles.separator} onMouseDown={this.onMouseDown}/>
             </div>);
     }

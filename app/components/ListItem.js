@@ -9,6 +9,7 @@ import {getDisplayName} from "../utils/name";
 import {connect} from "react-redux";
 import {listSelect} from "../actions/list";
 import {calcIntensity, formatBytes} from "../utils";
+import {C} from "../utils";
 
 class ListColumn extends Component<Props> {
     props: Props;
@@ -34,7 +35,8 @@ class ListColumn extends Component<Props> {
                      textAlign: right ? 'right' : 'left',
                      backgroundColor: do {
                          if (intensity) {
-                             `rgba(${[255, 255 * (1 - intensity), 255 * (1 - intensity), 0.3].join(',')})`
+                             // `rgba(${[255, 255 * (1 - intensity), 255 * (1 - intensity), 0.3].join(',')})`
+                             `rgba(${[255, 0, 0, intensity/3].join(',')})`
                          } else {
                              'rgba(255, 255, 255, 0)'
                          }
@@ -263,20 +265,20 @@ class ListItem extends Component<Props> {
         }
         return (
             <React.Fragment>
-                <div ref={this.ref} key={item.pid} className={styles.bigRow}
-                     onClick={() => selectable && listSelect(item.pid)}
+                <div ref={this.ref} key={item.pid}
+                     onMouseDown={() => selectable && listSelect(item.pid)}
                      active={do {
                          if (item.pid === list.currentSelection && selectable) {
-                             "active"
+                             // "active"
                          } else if (this.isChildOf(list.currentSelection)) {
-                             "semi"
+                             // "semi"
                          // } else if (this.isParentOf(list.currentSelection) && selectable) {
                          //     "semi"
                          } else {
-                             "inactive"
+                             // "inactive"
                          }
                      }}>
-                    <div className={styles.row}>
+                    <div className={C(styles.row, item.pid === list.currentSelection && selectable || this.isChildOf(list.currentSelection) ? "selected" : "", "view")} tabIndex={-1}>
                         {render && rowContent}
                     </div>
                 </div>
