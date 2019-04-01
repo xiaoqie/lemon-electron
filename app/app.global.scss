@@ -33,3 +33,11 @@ body {
     -webkit-user-drag: none;
     cursor: default;
 }
+
+#root {
+    width: 100vw;
+    height: 100vh;
+
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+}

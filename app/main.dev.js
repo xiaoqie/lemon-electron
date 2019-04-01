@@ -110,7 +110,7 @@ async function createWindow() {
 function _createWindowTransparent() {
     let parent = new BrowserWindow({
         width: 1024,
-        height: 728,
+        height: 768,
         transparent: true,
         frame: false
     });

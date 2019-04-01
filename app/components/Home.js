@@ -51,34 +51,38 @@ class Home extends Component<Props> {
         };
 
         return (
-            <div className={C(styles.container, "treeview", "view")}>
-                <div className="titlebar header-bar">
-                    <div className="title">Lemonitor</div>
-                    <div className="titlebutton-wrapper">
-                        <span className="titlebutton button" onClick={() => remote.getCurrentWindow().minimize()}>
-                            <i className="material-icons">minimize</i>
-                        </span>
-                        <span className="titlebutton button" onClick={() => {
-                            const window = remote.getCurrentWindow();
-                            if (!window.isMaximized()) {
-                                window.maximize();
-                            } else {
-                                window.unmaximize();
-                            }
-                        }}>
-                            <i className="material-icons">fullscreen</i>
-                        </span>
-                        <span className="titlebutton button" onClick={() => remote.getCurrentWindow().close()}>
-                            <i className="material-icons">close</i>
-                        </span>
-                    </div>
+            <div className={C(styles.container, "treeview", "view", "window", "decoration")}>
+                <div className="header-bar headerbar titlebar">
+                    {/*<div className="titlebar">*/}
+                        <div className="title">Lemonitor</div>
+                        <div className="titlebutton-wrapper">
+                            <span className="titlebutton button" onClick={() => remote.getCurrentWindow().minimize()}>
+                                <i className="material-icons">minimize</i>
+                            </span>
+                            <span className="titlebutton button" onClick={() => {
+                                const window = remote.getCurrentWindow();
+                                if (!window.isMaximized()) {
+                                    window.maximize();
+                                } else {
+                                    window.unmaximize();
+                                }
+                            }}>
+                                <i className="material-icons">fullscreen</i>
+                            </span>
+                            <span className="titlebutton button" onClick={() => remote.getCurrentWindow().close()}>
+                                <i className="material-icons">close</i>
+                            </span>
+                        </div>
+                    {/*</div>*/}
                 </div>
-                <div className={C(styles.header, "header")}>
+                {/*<div className="treeview view">*/}
+                <div className={C(styles.header, "header", "background")}>
                     <ListHeader headerInfo={headerInfo}/>
                 </div>
-                <div className={C(styles.list, "treeview")}>
+                <div className={C(styles.list, "treeview", "background")}>
                     <List depth={0} items={processes}/>
                 </div>
+                {/*</div>*/}
             </div>
         );
     }
