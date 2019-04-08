@@ -36,7 +36,7 @@ class ListColumn extends Component<Props> {
                      backgroundColor: do {
                          if (intensity) {
                              // `rgba(${[255, 255 * (1 - intensity), 255 * (1 - intensity), 0.3].join(',')})`
-                             `rgba(${[255, 0, 0, intensity/3].join(',')})`
+                             `rgba(${[255, 0, 0, intensity / 3].join(',')})`
                          } else {
                              'rgba(255, 255, 255, 0)'
                          }
@@ -67,13 +67,13 @@ class ListItem extends Component<Props> {
 
     shouldComponentUpdate(nextProps, nextState) {
         // FIXME: uncollapse an item doesn't rerender items below
-/*        if (!this.renderedLastTime && this.inSight()) {
-            return true;
-        }
-        if (!this.inSight()) {
-            this.renderedLastTime = false;
-            return false;
-        }*/
+        /*                if (!this.renderedLastTime && this.inSight()) {
+                            return true;
+                        }
+                        if (!this.inSight()) {
+                            this.renderedLastTime = false;
+                            return false;
+                        }*/
 
         const result = (
             deepEqual(this.props.list, nextProps.list) &&
@@ -263,22 +263,20 @@ class ListItem extends Component<Props> {
                 }
             }
         }
+        let isSelected = false;
+        if (item.pid === list.currentSelection && selectable || this.isChildOf(list.currentSelection)) {
+            isSelected = true;
+        }
         return (
             <React.Fragment>
                 <div ref={this.ref} key={item.pid}
-                     onMouseDown={() => selectable && listSelect(item.pid)}
-                     active={do {
-                         if (item.pid === list.currentSelection && selectable) {
-                             // "active"
-                         } else if (this.isChildOf(list.currentSelection)) {
-                             // "semi"
-                         // } else if (this.isParentOf(list.currentSelection) && selectable) {
-                         //     "semi"
-                         } else {
-                             // "inactive"
-                         }
-                     }}>
-                    <div className={C(styles.row, item.pid === list.currentSelection && selectable || this.isChildOf(list.currentSelection) ? "selected" : "", "view")} tabIndex={-1}>
+                     onMouseDown={() => selectable && listSelect(item.pid)}>
+                    <div id={`row_${item.pid}`}
+                         className={C(
+                             styles.row,
+                             isSelected ? "selected" : "",
+                             "view")}
+                         tabIndex={selectable ? -1 : "disabled"}>
                         {render && rowContent}
                     </div>
                 </div>

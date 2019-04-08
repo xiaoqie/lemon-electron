@@ -4,8 +4,6 @@ import {processLog} from "../constants/log-type";
 
 export const RECEIVE_LOG = "RECEIVE_LOG";
 
-const {knownDaemons, terminalApps} = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'dist/config.json')));
-
 function cumsum(obj, field) { /* eslint-disable no-param-reassign */
     if (!obj.children) {
         return obj[field];
@@ -24,7 +22,16 @@ function flatten(obj) {
     return result;
 }
 
-function process(log) {
+function regexArrayIncludes(regexes, str) {
+    for (const r of regexes) {
+        const regex = RegExp(r);
+        if (regex.test(str))
+            return true;
+    }
+    return false;
+}
+
+function process(log, config) {
     const {sys, processes, users, shells, lsblk} = log;
     let {systemd_units} = log;
 
@@ -32,7 +39,7 @@ function process(log) {
     systemd_units = Object.assign(...systemd_units.map(u => ({[u[0]]: Object.assign(...u.map((v, i) => ({[elements[i]]: v})))})));
 
     // evaluate information, make process tree
-    for (const pid in processes) if (Object.prototype.hasOwnProperty.call(processes, pid)) {
+    for (const pid in processes) {
         const p = processes[pid];
         const cgroupList = p.cgroup.split('/');
         if (p.cgroup === '/') {
@@ -62,52 +69,46 @@ function process(log) {
         }
     }
 
-    for (const pid in processes) if (Object.prototype.hasOwnProperty.call(processes, pid)) {
+    for (const pid in processes) {
         const p = processes[pid];
-        if (p.comm === "(systemd)") {
+        const parent = processes[p.ppid];
+        const cgroupList = p.cgroup.split('/');
+        const lastCGroup = cgroupList[cgroupList.length - 1];
+        if (regexArrayIncludes(config.spawners, p.comm)) {
             p.isSpawner = true;
         }
-        if (p.comm === "(gnome-shell)") {
+        if (regexArrayIncludes(config.guiSpawners, p.comm)) {
             p.isSpawner = true;
             for (const cpid in p.children) {
                 p.children[cpid].type = 'gui';
             }
         }
-        if (terminalApps.includes(path.basename(p.exe))) {
+        if (regexArrayIncludes(config.terminalApps, path.basename(p.exe))) {
             p.isSpawner = true;
             for (const cpid in p.children) {
                 p.children[cpid].type = 'terminal';
             }
         }
-        const GUIs = [];
-        if (GUIs.includes(path.basename(p.exe))) {
+        if (regexArrayIncludes(config.knownApps, path.basename(p.exe))) {
             p.type = 'gui';
             p.isGenesis = true;
             delete processes[p.ppid].children[pid];
         }
-    }
-
-    // 把spawner的孩子拎出来
-    for (const pid in processes) if (Object.prototype.hasOwnProperty.call(processes, pid)) {
-        const p = processes[pid];
-        if (p.isSpawner) {
-            for (const cpid in p.children) {
-                p.children[cpid].isGenesis = true;
-            }
-            p.children = {};
+        if (regexArrayIncludes(config.wineApps, path.basename(p.exe))) {
+            p.type = 'wine';
+            p.isGenesis = true;
+            delete processes[p.ppid].children[pid];
         }
-    }
-    for (const pid in processes) if (Object.prototype.hasOwnProperty.call(processes, pid)) {
-        const p = processes[pid];
-        const parent = processes[p.ppid];
-        const cgroupList = p.cgroup.split('/');
-        const lastCGroup = cgroupList[cgroupList.length - 1];
-        if (p.isGenesis && p.type !== 'terminal' &&
-            !(knownDaemons.includes(path.basename(p.exe)) || knownDaemons.includes(p.comm)) &&
+
+        if (p.type !== 'terminal' && p.type !== 'wine' &&
+            !(
+                regexArrayIncludes(config.knownDaemons, path.basename(p.exe)) ||
+                regexArrayIncludes(config.knownDaemons, p.comm)
+            ) &&
             (
-                p.service === 'session-4.scope' ||
-                (p.service === 'user@1000.service' &&
-                    (lastCGroup === 'dbus.service' || lastCGroup === 'gnome-terminal-server.service'))
+                (p.service === 'session-4.scope' && parent?.service !== 'session-4.scope') ||
+                (p.service === 'user@1000.service' && parent?.service !== 'user@1000.service' &&
+                    (lastCGroup === 'dbus.service' || lastCGroup === 'gnome-terminal-server.service')) // TODO better conditioning
             )) {
             p.type = 'gui';
             p.isGenesis = true;
@@ -116,10 +117,22 @@ function process(log) {
         }
     }
 
-    // service grouping
-    for (const pid in processes) if (Object.prototype.hasOwnProperty.call(processes, pid)) {
+    // 把spawner的孩子拎出来
+    for (const pid in processes) {
         const p = processes[pid];
-        if (p.isGenesis && p.service && p.type !== "gui" && p.type !== "terminal") {
+        if (p.isSpawner) {
+            for (const cpid in p.children) {
+                if (p.children[cpid].state !== "Z") // TODO more zombie detections
+                    p.children[cpid].isGenesis = true;
+            }
+            p.children = {};
+        }
+    }
+
+    // service grouping
+    for (const pid in processes) {
+        const p = processes[pid];
+        if (p.isGenesis && p.service && p.type !== "gui" && p.type !== "terminal" && p.type !== "wine") {
             if (!(p.service in processes)) {
                 const dummyProc = processLog();
                 dummyProc.pid = p.service;
@@ -136,14 +149,14 @@ function process(log) {
         }
     }
     // FIXME where to flatten?
-    for (const pid in processes) if (Object.prototype.hasOwnProperty.call(processes, pid)) {
+    for (const pid in processes) {
         const p = processes[pid];
         if (p.isGenesis && p.type !== 'group') {
             p.children = flatten(p);
         }
     }
     // cumsum
-    for (const pid in processes) if (Object.prototype.hasOwnProperty.call(processes, pid)) {
+    for (const pid in processes) {
         const p = processes[pid];
         if (p.isGenesis) {
             cumsum(p, "cpu_usage");
@@ -182,11 +195,16 @@ function process(log) {
     processes.terminal.type = 'group';
     processes.terminal.pid = 'terminal';
 
+    processes.wine = processLog();
+    processes.wine.cmdline = 'Wine';
+    processes.wine.type = 'group';
+    processes.wine.pid = 'wine';
+
     processes.service = processLog();
     processes.service.cmdline = 'Services';
     processes.service.type = 'group';
     processes.service.pid = 'service';
-    for (const pid in processes) if (Object.prototype.hasOwnProperty.call(processes, pid)) {
+    for (const pid in processes) {
         const p = processes[pid];
         if (p.isGenesis && p.type !== 'group') {
             if (p.type === 'gui') {
@@ -195,6 +213,9 @@ function process(log) {
             } else if (p.type === 'terminal') {
                 p.isGenesis = false;
                 processes.terminal.children[pid] = p;
+            } else if (p.type === "wine") {
+                p.isGenesis = false;
+                processes.wine.children[pid] = p;
             } else {
                 p.isGenesis = false;
                 processes.service.children[pid] = p;
@@ -202,16 +223,9 @@ function process(log) {
         }
     }
     processes.gui.isGenesis = true;
+    processes.wine.isGenesis = true;
     processes.service.isGenesis = true;
     processes.terminal.isGenesis = true;
-
-    // filter out non-genesis processes to pass to <List>
-    for (const pid in processes) if (Object.prototype.hasOwnProperty.call(processes, pid)) {
-        const p = processes[pid];
-        if (!p.isGenesis) {
-            delete processes[pid];
-        }
-    }
 
     const parentsChildrenDict = {};
     const retrieveChildren = (obj) => {
@@ -223,7 +237,8 @@ function process(log) {
         return result;
     };
     for (const pid in processes) {
-        retrieveChildren(processes[pid]);
+        if (processes[pid].isGenesis)
+            retrieveChildren(processes[pid]);
     }
     for (const pid in parentsChildrenDict) {
         for (const cpid of parentsChildrenDict[pid].children) {
@@ -234,9 +249,9 @@ function process(log) {
     return {sys, processes, systemd_units, users, shells, lsblk, parentsChildrenDict};
 }
 
-export const receiveLog = log => dispatch => {
+export const receiveLog = log => (dispatch, getState) => {
     dispatch({
         type: RECEIVE_LOG,
-        payload: Object.keys(log).length !== 0 ? process(log) : {}
+        payload: Object.keys(log).length !== 0 ? process(log, getState().config) : {}
     });
 };

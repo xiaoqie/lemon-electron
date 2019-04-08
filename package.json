@@ -60,6 +60,7 @@
     "productName": "LeMonitor",
     "appId": "dev.saki.LemonElectron",
     "files": [
+      "app/gtk-theme/",
       "app/dist/",
       "app/app.html",
       "app/main.prod.js",
@@ -241,6 +242,8 @@
     "node-sass": "^4.10.0",
     "opencollective-postinstall": "^2.0.1",
     "optimize-css-assets-webpack-plugin": "^5.0.1",
+    "postcss": "^7.0.5",
+    "postcss-selector-parser": "^6.0.2",
     "prettier": "^1.15.2",
     "react-test-renderer": "^16.6.3",
     "redux-logger": "^3.0.6",
@@ -264,6 +267,7 @@
     "webpack-dev-server": "^3.1.10",
     "webpack-merge": "^4.1.4",
     "ws": "^6.2.0",
+    "jquery": "^3.3.1",
     "yarn": "^1.12.3"
   },
   "dependencies": {

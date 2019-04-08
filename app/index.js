@@ -6,12 +6,7 @@ import {configureStore, history} from './store/configureStore';
 import './app.global.scss';
 import * as websocket from './utils/websocket';
 import {receiveLog} from "./actions/log";
-
-import getTheme from './electron-gtk-theme'
-getTheme({
-    outputPath: __dirname + "/gtk-theme"
-});
-
+import './utils/import-gtk-theme';
 
 const store = configureStore({
     list: {
@@ -28,15 +23,58 @@ const store = configureStore({
         ],
     },
     config: {
-        netBandwidth: 100 * 1024 * 1024 / 8
+        netBandwidth: 100 * 1024 * 1024 / 8,
+        "knownDaemons": [
+            ".*\\.AppImage",  // suffix isn't a reliable way to identify file type
+            // Ubuntu GNOME:
+            "dbus-daemon",
+            "dbus-launch",
+            "pulseaudio",
+            "gnome-keyring-daemon",
+            "dconf-service",
+            "goa-daemon",
+            "gsd-printer",
+            "gconfd-2",
+            "goa-identity-service",
+            "gnome-shell-calendar-server",
+            "tumblerd",
+            "gdm-session-worker",
+            "gvfs.*",
+
+            // Elementary OS:
+            "io.elementary.files-daemon",
+            "contractor",
+
+            // Others:
+            "fcitx-dbus-watcher",
+            "sogou-qimpanel-watchdog"
+        ],
+        "knownApps": [
+            "gnome-software"
+        ],
+        "terminalApps": [
+            "io.elementary.terminal",
+            "gnome-terminal-server"
+        ],
+        "spawners": [
+            "(gdm3)",
+            "(systemd)"
+        ],
+        "guiSpawners":
+        [
+            "(gnome-shell)"
+        ],
+        "wineApps":
+        [
+            "wine-preloader",
+            "wineserver.real"
+        ]
     }
 });
 
 const port = 8089;
 websocket.connect(`ws://127.0.0.1:${port}`, log => {
-    const scroll = document.documentElement.scrollTop;
     store.dispatch(receiveLog(log));
-    document.documentElement.scrollTop = scroll;
 });
 
 render(

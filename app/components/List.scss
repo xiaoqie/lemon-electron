@@ -1,4 +1,5 @@
 @import "../constants/constants.scss";
+
 $handleWidth: 10px;
 $headerHeight: 64px;
 $columnPadding: 4px;
@@ -37,23 +38,11 @@ $columnPadding: 4px;
     line-height: $lineHeight !important;
     padding-left: ($arrowSize - 20px)/2 + ($lineHeight - $iconSize)/4 !important;
     padding-right: ($arrowSize - 20px)/2 - ($lineHeight - $iconSize)/4 !important;
-/*    color: gray;
+    /*    color: gray;
 
-    &:hover {
-        color: black;
-    }*/
-}
-
-.bigRow {
-    &:focus {
-        //background-color: lightskyblue;
-    }
-    &[active='active'] {
-        background-color: lightskyblue;
-    }
-    &[active='semi'] {
-        background-color: lightblue;
-    }
+        &:hover {
+            color: black;
+        }*/
 }
 
 .row {
@@ -71,13 +60,19 @@ $columnPadding: 4px;
     width: 100%;
     white-space: nowrap;
     z-index: 9999;
+    display: flex;
+    flex-direction: row;
 
     //border-bottom: lightgray 1px solid;
 }
 
 .icon {
+    min-width: $iconSize;
+    min-height: $iconSize;
     width: $iconSize;
     height: $iconSize;
+    max-width: $iconSize;
+    max-height: $iconSize;
     padding: ($lineHeight - $iconSize) / 2;
     vertical-align: middle;
 }
@@ -151,11 +146,14 @@ $columnPadding: 4px;
 .headerColumn {
     @extend %column;
 
-  box-sizing: border-box;
-    width: inherit;
+    box-sizing: border-box;
     padding: 0 !important;
+    flex: 1 0 auto;
 
     .content {
+        &.indicator {
+        }
+
         display: grid;
         overflow: hidden;
         grid-template-rows: 5fr 3fr;
@@ -178,6 +176,7 @@ $columnPadding: 4px;
                 font-size: $lineHeight / 4 * 3 !important;
                 line-height: $lineHeight / 4 * 3 !important;
             }
+
             .text {
                 grid-column: 2 / 3;
                 display: inline-block;

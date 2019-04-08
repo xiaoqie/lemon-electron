@@ -37,20 +37,25 @@ class HeaderColumn extends Component<Props> {
     render() {
         const {width, children, sortClick} = this.props;
         const {intensity} = this.props;
+        const color = `rgba(${[255, 0, 0, intensity / 1.5].join(',')})`;
         return (
             <div className={C(styles.headerColumn, "button")}
                  style={{
                      width: `${width}px`,
-                     backgroundColor: do {
-                         if (intensity) {
-                             // `rgba(${[255, 255 * (1 - intensity), 255 * (1 - intensity), 0.3].join(',')})`
-                             `rgba(${[255, 0, 0, intensity/3].join(',')})`
-                         } else {
-                             'rgba(255, 255, 255, 0)'
-                         }
-                     }
                  }}>
-                <div onClick={sortClick} className={C(styles.content)}>{children}</div>
+                <div onClick={sortClick} className={C(styles.content)}
+                     style={{
+                         backgroundImage: do {
+                             if (intensity) {
+                                 // `rgba(${[255, 255 * (1 - intensity), 255 * (1 - intensity), 0.3].join(',')})`
+                                 `linear-gradient(transparent 95%, ${color} 95%)`
+                             } else {
+                                 'rgba(255, 255, 255, 0)'
+                             }
+                         }
+                     }}>
+                    {children}
+                </div>
                 <div ref={this.handle} className={styles.separator} onMouseDown={this.onMouseDown}/>
             </div>);
     }
@@ -148,8 +153,8 @@ class ListHeader extends Component<Props> {
                                                    calcIntensity(netSpeed / config.netBandwidth, 0.8) :
                                                    calcIntensity(netSpeed, 1024 * 1024)}
                                                sortClick={() => sortClick(col)}>
-                        <div className={styles.indicator}>{config. netBandwidth ?
-                            (netSpeed / config.netBandwidth * 100.0).toFixed(1) + '%':
+                        <div className={styles.indicator}>{config.netBandwidth ?
+                            (netSpeed / config.netBandwidth * 100.0).toFixed(1) + '%' :
                             formatBytes(netSpeed, 1)}</div>
                         <div className={styles.title}>
                             {sortArrow}
@@ -185,14 +190,19 @@ class ListHeader extends Component<Props> {
 
             }
         }
+        content.push(
+            <div key="header_placeholder" className={C(styles.headerColumn, "button")}
+                 style={{
+                     flex: "0 1 auto",
+                     width: "100%"
+                 }}>
+            </div>
+        );
 
         return (
-            <React.Fragment>
-                <div className={styles.listHeader}>
-                    {content}
-                </div>
-                <div className={styles.listHeaderPlaceholder}/>
-            </React.Fragment>
+            <div className={styles.listHeader}>
+                {content}
+            </div>
         );
     }
 }

@@ -4,8 +4,12 @@ import {remote} from 'electron';
 import List from "./List";
 import ListHeader from "./ListHeader";
 import {connect} from 'react-redux';
+import $ from 'jquery';
 import styles from './Home.scss';
 import {C} from "../utils";
+import gtkTheme, {closeListeners} from '../utils/import-gtk-theme'
+import ContextMenu from "./ContextMenu";
+import GtkWidgetFactory from "./GtkWidgetFactory";
 
 
 type Props = {};
@@ -15,74 +19,102 @@ class Home extends Component<Props> {
 
     constructor() {
         super();
-        this.scrollHandler = this.scrollHandler.bind(this);
+        this.list = React.createRef();
+        this.listLastScrollTop = 0;
     }
 
     componentDidMount() {
-        window.addEventListener('scroll', this.scrollHandler);
+        $(window).click(e => {
+            // FIXME: this solution is not good enough
+            $(".popup.window").hide();
+            $(".popover").hide();
+        });
+        window.onbeforeunload = (e) => {
+            closeListeners();
+        }
+    }
+
+    componentWillUpdate() {
+        // if (this.list.current)
+        //     this.listLastScrollTop = this.list.current.scrollTop;
+    }
+
+    componentDidUpdate() {
+        // if (this.list.current)
+        //     this.list.current.scrollTop = this.listLastScrollTop;
     }
 
     componentWillUnmount(): void {
-        window.removeEventListener('scroll', this.scrollHandler);
     }
 
-    setState(state) {
-        const scroll = document.documentElement.scrollTop;
-        super.setState(state);
-        document.documentElement.scrollTop = scroll;
+    minimizeWindow() {
+        remote.getCurrentWindow().minimize();
     }
 
-    scrollHandler() {
-        // force update no longer works
-        this.forceUpdate();
+    maximizeWindow() {
+        const window = remote.getCurrentWindow();
+        if (!window.isMaximized()) {
+            window.maximize();
+        } else {
+            window.unmaximize();
+        }
+    }
+
+    closeWindow() {
+        remote.getCurrentWindow().close();
     }
 
     render() {
+        // return <GtkWidgetFactory/>;
         const {log} = this.props;
-        const {sys, processes} = log;
+        let {processes} = log;
         // console.log(sys);
         // console.log(proc);
-        if (!processes) {
-            return (<div>Connecting...</div>);
+        if (!processes || !gtkTheme()) {
+            return (<div className="loading">Connecting...</div>);
         }
-        const headerInfo = {
-            "cpu": sys.cpus.cpu / 4,
-            "mem": 1 - sys.MemAvailable / sys.MemTotal
-        };
+
+        processes = {...processes};
+        // filter out non-genesis processes to pass to <List>
+        for (const pid in processes) {
+            const p = processes[pid];
+            if (!p.isGenesis) {
+                delete processes[pid];
+            }
+        }
 
         return (
-            <div className={C(styles.container, "treeview", "view", "window", "decoration")}>
+            <div className={C(styles.container, "window", "decoration", "csd")}>
+                <ContextMenu/>
                 <div className="header-bar headerbar titlebar">
-                    {/*<div className="titlebar">*/}
-                        <div className="title">Lemonitor</div>
-                        <div className="titlebutton-wrapper">
-                            <span className="titlebutton button" onClick={() => remote.getCurrentWindow().minimize()}>
-                                <i className="material-icons">minimize</i>
-                            </span>
-                            <span className="titlebutton button" onClick={() => {
-                                const window = remote.getCurrentWindow();
-                                if (!window.isMaximized()) {
-                                    window.maximize();
-                                } else {
-                                    window.unmaximize();
-                                }
-                            }}>
-                                <i className="material-icons">fullscreen</i>
-                            </span>
-                            <span className="titlebutton button" onClick={() => remote.getCurrentWindow().close()}>
-                                <i className="material-icons">close</i>
-                            </span>
+                    <div className="title-center title">Lemonitor</div>
+                    <div className="box horizontal title-right spacing-6">
+                        <div id="window-minimize" className="titlebutton button minimize" onClick={this.minimizeWindow}>
+                            <img src={gtkTheme()?.iconMap["window-minimize-symbolic"]}/>
                         </div>
-                    {/*</div>*/}
+                        <div id="window-maximize" className="titlebutton button maximize" onClick={this.maximizeWindow}>
+                            <img src={gtkTheme()?.iconMap["window-maximize-symbolic"]}/>
+                        </div>
+                        <div id="window-close" className="titlebutton button close" onClick={this.closeWindow}>
+                            <img src={gtkTheme()?.iconMap["window-close-symbolic"]}/>
+                        </div>
+                    </div>
                 </div>
-                {/*<div className="treeview view">*/}
-                <div className={C(styles.header, "header", "background")}>
-                    <ListHeader headerInfo={headerInfo}/>
+                <div className={C("searchbar", styles.searchbar)}>
+                    <div className="revealer">
+                        <div className="box center">
+                            <input placeholder="search" className={"view"}/>
+                        </div>
+                    </div>
                 </div>
-                <div className={C(styles.list, "treeview", "background")}>
-                    <List depth={0} items={processes}/>
+                <div className={C("treeview", "view", styles.treeview)}>
+                    <div className={C(styles.header, "header")}>
+                        <ListHeader/>
+                    </div>
+                    <div ref={this.list} className={C(styles.list, "background")}>
+                        <List depth={0} items={processes}/>
+                    </div>
                 </div>
-                {/*</div>*/}
             </div>
         );
     }

@@ -1,17 +1,14 @@
-import _getTheme from './getGTKTheme';
+import _getTheme from './gtk-theme';
 
-const getTheme = function (config = {outputPath: __dirname}) {
-    return _getTheme(config).then(function (result) {
-        document.querySelector('head > script:nth-child(5)')
+export default async function loadTheme(config = {outputPath: __dirname}) {
+    const result = await _getTheme(config);
+
+    if (!document.getElementById("gtk-theme")) {
         const style = document.createElement('style');
-        style.id = 'theme';
+        style.id = 'gtk-theme';
         document.getElementsByTagName('head')[0].appendChild(style);
-        style.innerHTML = result.raw;
-        // require('electron').remote.getCurrentWindow().webContents.insertCSS(result.raw);
-        return result;
-    }).catch(function (e) {
-        return console.error(e.stack);
-    });
+    }
+    const style = document.getElementById("gtk-theme");
+    style.innerHTML = result.raw;
+    return result;
 }
-
-export default getTheme;

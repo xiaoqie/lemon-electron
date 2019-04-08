@@ -10,3 +10,8 @@ export const calcIntensity = (value, max) => Math.tanh(0.1 + value / max * 2);
 export function C(...classNames) {
     return classNames.join(' ');
 }
+
+export function moveMenuWindowTo(window, {x, y}) {
+    const menu = window.find(".menu");
+    window.css({"top": y - (menu.outerHeight(true) - menu.outerHeight())/2, "left": x - (menu.outerWidth(true) - menu.outerWidth())/2});
+}

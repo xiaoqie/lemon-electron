@@ -109,6 +109,7 @@ async function createWindow() {
 
 function _createWindowTransparent() {
     let parent = new BrowserWindow({
+        icon: `${__dirname}/dist/icons/64x64.png`,
         width: 1024,
         height: 768,
         transparent: true,
@@ -120,8 +121,11 @@ function _createWindowTransparent() {
     });
 
     parent.loadURL(`file://${__dirname}/app.html`);
-    // parent.webContents.openDevTools();
+    if (process.env.DEBUG_PROD === 'true') {
+        parent.webContents.openDevTools();
+    }
 }
+
 const createWindowTransparent = () => setTimeout(_createWindowTransparent, 500);
 
 app.on('ready', createWindowTransparent);

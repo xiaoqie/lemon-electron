@@ -2,16 +2,9 @@
  * @NOTE: Prepend a `~` to css file paths that are in your node_modules
  *        See https://github.com/webpack-contrib/sass-loader#imports
  */
-
 @import "constants/constants";
 
 
-html {
-    font-family: 'Roboto', sans-serif;
-}
-div {
-    font-size: $fontSize;
-}
 :not(input):not(textarea),
 :not(input):not(textarea)::after,
 :not(input):not(textarea)::before {
@@ -23,21 +16,90 @@ div {
 input, button, textarea, * {
     outline: none; /* You should add some other style for :focus to help UX/a11y */
 }
-body {
-    margin: 0;
-    background: transparent !important;
-}
 
 *, *::after, *::before {
     -webkit-user-select: none;
     -webkit-user-drag: none;
-    cursor: default;
+    //cursor: default;
+    //background-size: contain;
+}
+
+
+$extraBodyMargin: 16px;
+
+body {
+    margin: $extraBodyMargin;
+    background: transparent !important;
 }
 
 #root {
-    width: 100vw;
-    height: 100vh;
+    width: calc(100vw - #{$extraBodyMargin} * 2);
+    height: calc(100vh - #{$extraBodyMargin} * 2);
 
     display: grid;
     grid-template-rows: minmax(0, 1fr);
+}
+
+
+.scrolledwindow {
+    -GtkScrolledWindow-scrollbar-spacing: 0;
+}
+
+*::-webkit-scrollbar {
+    background-color: transparent;
+    transition: all 600ms ease-out;
+    -GtkScrollbar-has-backward-stepper: false;
+    -GtkScrollbar-has-forward-stepper: false;
+}
+
+*::-webkit-scrollbar:hover {
+    transition: all 200ms ease-in-out;
+}
+
+*::-webkit-scrollbar .button {
+    border: none;
+    background-image: none;
+    background-color: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    height: 30px;
+    width: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    width: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: rgba(250, 250, 250, 0.6);
+    border: 1px solid rgba(82, 88, 96, 0.25);
+    border-radius: 10px;
+    margin: 1px;
+    transition: all 200ms ease-in-out;
+}
+
+*::-webkit-scrollbar.overlay-indicator .slider:hover {
+    border-radius: 20px;
+}
+
+*::-webkit-scrollbar .trough {
+    padding: 0;
+}
+
+*::-webkit-scrollbar.overlay-indicator .trough {
+    background-color: transparent;
+}
+
+*::-webkit-scrollbar.overlay-indicator:hover .trough {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+*::-webkit-scrollbar:hover .trough {
+    background-color: transparent;
+    border-radius: 0;
+}
+
+.trough {
+    background-color: #3d4248;
 }

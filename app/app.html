@@ -13,31 +13,35 @@
                     document.getElementsByTagName('head')[0].appendChild(link);
                 }
             }());
+
+            require("electron").remote.getCurrentWindow().on('focus', () => {
+                document.getElementById("root").classList.remove("backdrop");
+            });
+
+            require("electron").remote.getCurrentWindow().on('blur', () => {
+                document.getElementById("root").classList.add("backdrop");
+            });
         </script>
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
-              rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+        <style>
+            .loading {
+                width: 50vh;
+                height: 50vh;
+                display: grid;
+                background-color: white;
+                color: black;
+                vertical-align: middle;
+                -webkit-app-region: drag;
+                justify-items: center;
+                align-items: center;
+            }
+        </style>
     </head>
     <body>
-        <!--    <div> <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/e6e2fb39-7ee2-4bd1-894d-685625953b50/d5e6lbp-65e1519f-345d-40d3-9f8c-1eb2217e182e.png/v1/fill/w_789,h_1013,strp/twilight_sparkle_cutie_mark__with_svg__by_intbrony_d5e6lbp-pre.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MjA1MyIsInBhdGgiOiJcL2ZcL2U2ZTJmYjM5LTdlZTItNGJkMS04OTRkLTY4NTYyNTk1M2I1MFwvZDVlNmxicC02NWUxNTE5Zi0zNDVkLTQwZDMtOWY4Yy0xZWIyMjE3ZTE4MmUucG5nIiwid2lkdGgiOiI8PTE2MDAifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.J7yz2_8VsYf6Mu47K8Rl6pNKaXf5LBvMDs18WzKdLJo" width="300" height="300"/> </div>-->
-<!--        <div class="container">
-            <div class="titlebar header-bar">
-                <div class="title">Lemonitor</div>
-                <div class="titlebutton-wrapper">
-                    <span class="titlebutton" onclick="require('electron').remote.getCurrentWindow().minimize()">
-                        <i class="material-icons">minimize</i>
-                    </span>
-                    <span class="titlebutton"
-                          onclick="const window = require('electron').remote.getCurrentWindow(); if (!window.isMaximized()) { window.maximize(); } else { window.unmaximize(); } ">
-                        <i class="material-icons">fullscreen</i>
-                    </span>
-                    <span class="titlebutton" onclick="require('electron').remote.getCurrentWindow().close()">
-                        <i class="material-icons">close</i>
-                    </span>
-                </div>
-            </div>-->
-            <div id="root"></div>
-<!--        </div>-->
+        <div id="root">
+            <div class="loading">loading...</div>
+        </div>
         <script>
             {
                 const scripts = [];

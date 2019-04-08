@@ -17,11 +17,9 @@ parse = function(value) {
       if (value === 'currentColor') {
         value = 'rgba(0, 0, 0, 0)';
       }
-      if ((ref = parseColor(value)) != null) {
-        return ref;
-      } else {
-        return ref;
-      }
+      ref = parseColor(value);
+      if (!ref.a) ref.a = 1;
+      return ref;
     })();
   } catch (error) {
     e = error;

@@ -49,6 +49,10 @@ export function distillCmdline(cmdline) {
     return exec;
 }
 
+function distillCmdlineForWine(cmdline) {
+    return distillCmdline(cmdline.replace(/\\/g, '/'));
+}
+
 export function parseComm(comm) {
     if (!comm) return "";
 
@@ -68,7 +72,11 @@ export function getDisplayName(proc) {
     const fromComm = parseComm(proc.comm);
     let displayName;
     if (proc.cmdline) {
-        fromCmdline = distillCmdline(proc.cmdline);
+        if (proc.type !== 'wine') {
+            fromCmdline = distillCmdline(proc.cmdline);
+        } else {
+            fromCmdline = distillCmdlineForWine(proc.cmdline);
+        }
     }
     if (fromCmdline && fromCmdline.includes(fromComm)) {
         displayName = fromCmdline;
