@@ -15,3 +15,12 @@ export function moveMenuWindowTo(window, {x, y}) {
     const menu = window.find(".menu");
     window.css({"top": y - (menu.outerHeight(true) - menu.outerHeight())/2, "left": x - (menu.outerWidth(true) - menu.outerWidth())/2});
 }
+
+export function stringCompare(a: string, b: string): number {
+    a = a.toLowerCase();
+    b = b.toLowerCase();
+    if (a === b) return 0;
+    if (a > b) return -1;
+    if (a < b) return 1;
+}
+

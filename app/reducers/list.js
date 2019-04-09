@@ -1,8 +1,9 @@
 // @flow
-import {LIST_RESIZE, LIST_SELECT, LIST_SORT} from "../actions/list";
+import {GENERATE_LIST, generateList, LIST_RESIZE, LIST_SELECT, LIST_SORT} from "../actions/list";
 import type { Action } from './types';
+import {RECEIVE_LOG} from "../actions/log";
 
-export default function list(state={sort: {}, layout: {}, currentSelection: null}, action: Action) {
+export default function list(state={listItems: [], sort: {}, layout: {}, currentSelection: null}, action: Action) {
     switch (action.type) {
         case LIST_SORT:
             return {
@@ -19,6 +20,17 @@ export default function list(state={sort: {}, layout: {}, currentSelection: null
                 ...state,
                 currentSelection: action.payload
             };
+        case GENERATE_LIST: {
+            const {log, config, list} = action.payload;
+            const {processes} = log;
+            const {sort} = list;
+            const listItems = generateList(processes, sort);
+            console.log(listItems);
+            return {
+                ...state,
+                listItems: listItems
+            };
+        }
         default:
             return state;
     }

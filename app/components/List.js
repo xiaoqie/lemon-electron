@@ -7,15 +7,8 @@ import routes from '../constants/routes';
 import ListItem from "./ListItem";
 import {getDisplayName} from "../utils/name";
 import {connect} from "react-redux";
+import {stringCompare} from "../utils";
 
-
-function stringCompare(a: string, b: string): number {
-    a = a.toLowerCase();
-    b = b.toLowerCase();
-    if (a === b) return 0;
-    if (a > b) return -1;
-    if (a < b) return 1;
-}
 
 class List extends Component<Props> {
     props: Props;

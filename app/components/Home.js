@@ -10,12 +10,14 @@ import {C} from "../utils";
 import gtkTheme, {closeListeners} from '../utils/import-gtk-theme'
 import ContextMenu from "./ContextMenu";
 import GtkWidgetFactory from "./GtkWidgetFactory";
+import PerfectScrollbar from "../scrollbar";
 
 
 type Props = {};
 
 class Home extends Component<Props> {
     props: Props;
+    listScrollBar;
 
     constructor() {
         super();
@@ -31,17 +33,17 @@ class Home extends Component<Props> {
         });
         window.onbeforeunload = (e) => {
             closeListeners();
-        }
+        };
     }
 
     componentWillUpdate() {
-        // if (this.list.current)
-        //     this.listLastScrollTop = this.list.current.scrollTop;
+        if (this.list.current)
+            this.listLastScrollTop = this.list.current.scrollTop;
     }
 
     componentDidUpdate() {
-        // if (this.list.current)
-        //     this.list.current.scrollTop = this.listLastScrollTop;
+        if (this.list.current)
+            this.list.current.scrollTop = this.listLastScrollTop;
     }
 
     componentWillUnmount(): void {
@@ -72,6 +74,9 @@ class Home extends Component<Props> {
         // console.log(proc);
         if (!processes || !gtkTheme()) {
             return (<div className="loading">Connecting...</div>);
+        } else {
+            // if (!this.listScrollBar && this.list.current)
+            //     this.listScrollBar = new PerfectScrollbar(this.list.current);
         }
 
         processes = {...processes};
@@ -107,12 +112,18 @@ class Home extends Component<Props> {
                         </div>
                     </div>
                 </div>
-                <div className={C("treeview", "view", styles.treeview)}>
-                    <div className={C(styles.header, "header")}>
-                        <ListHeader/>
+                <div className="scrolledwindow">
+                    <div className={C("treeview", "view", styles.treeview)}>
+                        <div className={C(styles.header, "header")}>
+                            <ListHeader/>
+                        </div>
+                        <div ref={this.list} className={C(styles.list, "background")}>
+                            <List depth={0} items={processes}/>
+                        </div>
                     </div>
-                    <div ref={this.list} className={C(styles.list, "background")}>
-                        <List depth={0} items={processes}/>
+                    <div className="scrollbar vertical overlay-indicator">
+                        <div className="slider"/>
+                        <div className="trough"/>
                     </div>
                 </div>
             </div>

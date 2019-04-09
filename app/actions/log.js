@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as fs from 'fs';
 import {processLog} from "../constants/log-type";
+import {GENERATE_LIST} from "./list";
 
 export const RECEIVE_LOG = "RECEIVE_LOG";
 
@@ -250,8 +251,13 @@ function process(log, config) {
 }
 
 export const receiveLog = log => (dispatch, getState) => {
+    const processedLog = Object.keys(log).length !== 0 ? process(log, getState().config) : {};
     dispatch({
         type: RECEIVE_LOG,
-        payload: Object.keys(log).length !== 0 ? process(log, getState().config) : {}
+        payload: processedLog
+    });
+    dispatch({
+        type: GENERATE_LIST,
+        payload: getState()
     });
 };
