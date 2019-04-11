@@ -1,8 +1,5 @@
 @import "../constants/constants.scss";
 
-$handleWidth: 10px;
-$headerHeight: 64px;
-$columnPadding: 4px;
 :export {
     arrowSize: $arrowSize;
     lineHeight: $lineHeight;
@@ -200,6 +197,14 @@ $columnPadding: 4px;
             line-height: $lineHeight / 4 * 5;
             text-align: right;
         }
+    }
+
+    .colorIndicator {
+        grid-column: 1/2;
+        grid-row: 1/2;
+        background-color: rgba(255, 0, 0, 0.7);
+        height: 1px;
+        align-self: end;
     }
 
     .separator {

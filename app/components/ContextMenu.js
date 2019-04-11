@@ -56,8 +56,10 @@ class ContextMenu extends Component<Props> {
         this.setState({x, y});
 
         const window = $(this.ref.current);
-        moveMenuWindowTo(window, {x, y});
-        setImmediate(() => window.show());
+        setImmediate(() => {
+            window.show();
+            moveMenuWindowTo(window, {x, y});
+        });
     }
 
     render() {

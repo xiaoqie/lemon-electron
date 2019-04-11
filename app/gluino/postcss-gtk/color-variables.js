@@ -10,7 +10,7 @@
 
   valueHook.add(function(str, node) {
     try {
-      return str.replace(/@([a-zA-Z$_][a-zA-Z0-9$_]*)/i, function(m, name) {
+      return str.replace(/@([a-zA-Z$_][a-zA-Z0-9$_]*)/g, function(m, name) {
         if (color_vars[name]) {
           return valueHook.hook(color_vars[name], node);
         } else {

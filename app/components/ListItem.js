@@ -7,7 +7,7 @@ import * as gnome from "../utils/gnome";
 import * as path from 'path';
 import {getDisplayName} from "../utils/name";
 import {connect} from "react-redux";
-import {listSelect} from "../actions/list";
+import {listSelect, listUncollapse} from "../actions/list";
 import {calcIntensity, formatBytes} from "../utils";
 import {C} from "../utils";
 
@@ -58,10 +58,6 @@ class ListItem extends Component<Props> {
     constructor(props) {
         super(props);
         const {item} = props;
-        this.collapseHandler = this.collapseHandler.bind(this);
-        this.state = {
-            collapsed: item.type === 'group' ? false : true
-        };
         this.ref = React.createRef();
     }
 
@@ -76,19 +72,14 @@ class ListItem extends Component<Props> {
                         }*/
 
         const result = (
-            deepEqual(this.props.list, nextProps.list) &&
             deepEqual(this.props.item, nextProps.item) &&
-            this.state.collapsed === nextState.collapsed
+            deepEqual(this.props.layout, nextProps.layout) &&
+            deepEqual(this.props.currentSelection, nextProps.currentSelection)
         );
         return !result;
     }
 
     renderedLastTime = false;
-
-    collapseHandler() {
-        const {collapsed} = this.state;
-        this.setState({collapsed: !collapsed});
-    }
 
     inSight() {
         let render = true;
@@ -106,7 +97,7 @@ class ListItem extends Component<Props> {
 
     isChildOf(pid) {
         const {item, log} = this.props;
-        const {parentsChildrenDict} = log;
+        const {parentsChildrenDict} = this.props;
         if (pid && parentsChildrenDict[item.pid.toString()].parents.includes(pid.toString())) {
             return true;
         }
@@ -115,7 +106,7 @@ class ListItem extends Component<Props> {
 
     isParentOf(pid) {
         const {item, log} = this.props;
-        const {parentsChildrenDict} = log;
+        const {parentsChildrenDict} = this.props;
         if (parentsChildrenDict[pid.toString()] && parentsChildrenDict[pid.toString()].parents.includes(item.pid.toString())) {
             return true;
         }
@@ -123,173 +114,107 @@ class ListItem extends Component<Props> {
     }
 
     render() {
-        const {item, depth} = this.props;
-        const {list} = this.props;
-        const {layout} = list;
-        const {listSelect} = this.props;
-
-        const {collapsed} = this.state;
-        const selectable = item.type !== 'group';
-        const collapsable = Object.keys(item.children).length !== 0 && item.type !== 'group';
-        const noIndent = !selectable;
-        const noIcon = noIndent;
-        const noInfo = noIndent;
-        const isDummy = item.type === 'service';  // dummy processes aren't real processes
-
+        const {item, layout, listSelect, listUncollapse, currentSelection} = this.props;
         const rowContent = [];
-        // const render = this.inSight();
-        const render = true;
-        if (render) {
-            for (const {col, width} of layout) {
-                const pad = depth * parseInt(styles.arrowSize);
-                switch (col) {
-                    case "name":
-                        rowContent.push(
-                            <ListColumn key={`${item.pid}_${col}`} width={width}>
-                                <div style={{display: 'flex', paddingLeft: `${pad}px`}}>
-                                    {do {
-                                        if (collapsable) {
-                                            <i className={styles.dropDownArrow} onClick={this.collapseHandler}>
-                                                {collapsed ? 'arrow_right' : 'arrow_drop_down'}
-                                            </i>;
-                                        } else {
-                                            <div style={{display: 'inline-block', paddingLeft: styles.arrowSize}}/>;
-                                        }
-                                    }}
-                                    {!noIcon && <img src={gnome.getIconURL(item)} alt="" className={styles.icon}/>}
-                                    <span className={styles.inlineLeft} title={item.cmdline}>
-                                        {getDisplayName(item)}
-                                        {item.type === 'terminal' && ` [@.../${path.basename(item.cwd)}]`}
-                                    </span>
-                                </div>
-                            </ListColumn>
-                        );
-                        break;
-                    case "pid":
-                        rowContent.push(
-                            <ListColumn key={`${item.pid}_${col}`} right width={width}>
+        for (const {col, width} of layout) {
+            switch (col) {
+                case "name": {
+                    const pad = item.depth * parseInt(styles.arrowSize, 10);
+                    rowContent.push(
+                        <ListColumn key={`${item.pid}_${col}`} width={width}>
+                            <div style={{display: 'flex', paddingLeft: `${pad}px`}}>
                                 {do {
-                                    if (noInfo) {
-                                        '';
-                                    } else if (!isDummy) {
-                                        item.pid;
+                                    if (item.collapsable) {
+                                        <i className={styles.dropDownArrow}
+                                           onClick={() => listUncollapse(item.pid)}>
+                                            {!item.expanded ? 'arrow_right' : 'arrow_drop_down'}
+                                        </i>;
                                     } else {
-                                        '';
+                                        <div style={{display: 'inline-block', paddingLeft: styles.arrowSize}}/>;
                                     }
                                 }}
-                            </ListColumn>);
-                        break;
-                    case "cpu":
-                        rowContent.push(
-                            <ListColumn key={`${item.pid}_${col}`} right width={width}
-                                        intensity={calcIntensity(item.cpu_usage / 4, 0.8)}>
-                                {do {
-                                    if (noInfo) {
-                                        '';
-                                    } else {
-                                        `${(item.cpu_usage / 4 * 100.0).toFixed(0)}%`;
-                                    }
-                                }}
-                            </ListColumn>);
-                        break;
-                    case "mem":
-                        rowContent.push(
-                            <ListColumn key={`${item.pid}_${col}`} right width={width}
-                                        intensity={calcIntensity(item.mem, 4 * 1024 * 1024 * 1024)}>
-                                {do {
-                                    if (noInfo) {
-                                        '';
-                                    } else {
-                                        formatBytes(item.mem, 1)
-                                    }
-                                }}
-                            </ListColumn>);
-                        break;
-                    case "disk":
-                        rowContent.push(
-                            <ListColumn key={`${item.pid}_${col}`} right width={width}
-                                        intensity={calcIntensity(item.disk_total, 10 * 1024)}>
-                                {do {
-                                    if (noInfo) {
-                                        '';
-                                    } else {
-                                        `${formatBytes(item.disk_total * 1024, 1)}/s`
-                                    }
-                                }}
-                            </ListColumn>);
-                        break;
-                    case "net":
-                        rowContent.push(
-                            <ListColumn key={`${item.pid}_${col}`} right width={width}
-                                        intensity={calcIntensity(item.net_total, 2 * 1024)}>
-                                {do {
-                                    if (noInfo) {
-                                        '';
-                                    } else {
-                                        `${formatBytes(item.net_total * 1024, 1)}/s`
-                                    }
-                                }}
-                            </ListColumn>);
-                        break;
-                    case "gpu-usage":
-                        rowContent.push(
-                            <ListColumn key={`${item.pid}_${col}`} right width={width}
-                                        intensity={calcIntensity(item.gpu_usage_total, 80)}>
-                                {do {
-                                    if (noInfo) {
-                                        '';
-                                    } else {
-                                        `${(item.gpu_usage_total).toFixed(0)}%`
-                                        /* item.nv_type */
-                                    }
-                                }}
-                            </ListColumn>);
-                        break;
-                    case "gpu-mem":
-                        rowContent.push(
-                            <ListColumn key={`${item.pid}_${col}`} right width={width}
-                                        intensity={calcIntensity(item.gpu_memory_used, 2 * 1024)}>
-                                {do {
-                                    if (noInfo) {
-                                        '';
-                                    } else {
-                                        formatBytes(item.gpu_memory_used * 1024 * 1024, 1)
-                                    }
-                                }}
-                            </ListColumn>);
-                        break;
-                    default:
-
+                                {item.icon !== 'none' && <img src={item.icon} alt="" className={styles.icon}/>}
+                                <span className={styles.inlineLeft} title={item.cmdline}>
+                                    {item.name}
+                                    {/*{item.type === 'terminal' && ` [@.../${path.basename(item.cwd)}]`}*/}
+                                </span>
+                            </div>
+                        </ListColumn>
+                    );
+                    break;
                 }
+                case "pid":
+                    rowContent.push(
+                        <ListColumn key={`${item.pid}_${col}`} right width={width}>
+                            {item.displayPid}
+                        </ListColumn>);
+                    break;
+                case "cpu":
+                    rowContent.push(
+                        <ListColumn key={`${item.pid}_${col}`} right width={width}
+                                    intensity={calcIntensity(item.cpu_usage / 4, 0.8)}>
+                            {item.cpu}
+                        </ListColumn>);
+                    break;
+                case "mem":
+                    rowContent.push(
+                        <ListColumn key={`${item.pid}_${col}`} right width={width}
+                                    intensity={calcIntensity(item.mem, 4 * 1024 * 1024 * 1024)}>
+                            {item.mem}
+                        </ListColumn>);
+                    break;
+                case "disk":
+                    rowContent.push(
+                        <ListColumn key={`${item.pid}_${col}`} right width={width}
+                                    intensity={calcIntensity(item.disk_total, 10 * 1024)}>
+                            {item.disk}
+                        </ListColumn>);
+                    break;
+                case "net":
+                    rowContent.push(
+                        <ListColumn key={`${item.pid}_${col}`} right width={width}
+                                    intensity={calcIntensity(item.net_total, 2 * 1024)}>
+                            {item.net}
+                        </ListColumn>);
+                    break;
+                case "gpu-usage":
+                    rowContent.push(
+                        <ListColumn key={`${item.pid}_${col}`} right width={width}
+                                    intensity={calcIntensity(item.gpu_usage_total, 80)}>
+                            {item.gpu}
+                        </ListColumn>);
+                    break;
+                case "gpu-mem":
+                    rowContent.push(
+                        <ListColumn key={`${item.pid}_${col}`} right width={width}
+                                    intensity={calcIntensity(item.gpu_memory_used, 2 * 1024)}>
+                            {item.vram}
+                        </ListColumn>);
+                    break;
+                default:
+
             }
         }
         let isSelected = false;
-        if (item.pid === list.currentSelection && selectable || this.isChildOf(list.currentSelection)) {
+        if (item.pid === currentSelection && item.selectable || this.isChildOf(currentSelection)) {
             isSelected = true;
         }
         return (
-            <React.Fragment>
-                <div ref={this.ref} key={item.pid}
-                     onMouseDown={() => selectable && listSelect(item.pid)}>
-                    <div id={`row_${item.pid}`}
-                         className={C(
-                             styles.row,
-                             isSelected ? "selected" : "",
-                             "view")}
-                         tabIndex={selectable ? -1 : "disabled"}>
-                        {render && rowContent}
-                    </div>
-                </div>
-                {Object.keys(item.children).length !== 0 && !collapsed &&
-                <List key={`${item.pid}_children`}
-                      depth={noIndent ? depth : depth + 1}
-                      items={item.children}/>}
-            </React.Fragment>
+            <div ref={this.ref} key={item.pid}
+                 onMouseDown={() => item.selectable && listSelect(item.pid)}
+                 id={`row_${item.pid}`}
+                 className={C(styles.row,
+                     isSelected ? "selected" : "",
+                     "view")}
+                 tabIndex={item.selectable ? -1 : "disabled"}>
+                {rowContent}
+            </div>
         );
     }
 }
 
 export default connect(state => ({
-    list: state.list,
-    log: state.log
-}), {listSelect})(ListItem);
+    currentSelection: state.list.currentSelection,
+    layout: state.list.layout,
+    parentsChildrenDict: state.log.parentsChildrenDict
+}), {listSelect, listUncollapse})(ListItem);

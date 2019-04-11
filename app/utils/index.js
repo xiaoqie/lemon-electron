@@ -12,8 +12,15 @@ export function C(...classNames) {
 }
 
 export function moveMenuWindowTo(window, {x, y}) {
+    const $ = require('jquery');
     const menu = window.find(".menu");
-    window.css({"top": y - (menu.outerHeight(true) - menu.outerHeight())/2, "left": x - (menu.outerWidth(true) - menu.outerWidth())/2});
+    const maxX = Math.max(0, $(document).outerWidth() - $(menu).outerWidth() - 32);
+    const maxY = Math.max(0, $(document).outerHeight() - $(menu).outerHeight() - 32);
+
+    window.css({
+        "top": Math.min(maxY, y - (menu.outerHeight(true) - menu.outerHeight()) / 2),
+        "left": Math.min(maxX, x - (menu.outerWidth(true) - menu.outerWidth()) / 2)
+    });
 }
 
 export function stringCompare(a: string, b: string): number {

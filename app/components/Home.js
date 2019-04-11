@@ -10,7 +10,6 @@ import {C} from "../utils";
 import gtkTheme, {closeListeners} from '../utils/import-gtk-theme'
 import ContextMenu from "./ContextMenu";
 import GtkWidgetFactory from "./GtkWidgetFactory";
-import PerfectScrollbar from "../scrollbar";
 
 
 type Props = {};
@@ -89,30 +88,30 @@ class Home extends Component<Props> {
         }
 
         return (
-            <div className={C(styles.container, "window", "decoration", "csd")}>
+            <div className={C(styles.container, "main-window", "window", "background", "decoration", "csd")}>
                 <ContextMenu/>
                 <div className="header-bar headerbar titlebar">
-                    <div className="title-center title">Lemonitor</div>
+                    <div className="title-center title label">Lemonitor</div>
                     <div className="box horizontal title-right spacing-6">
                         <div id="window-minimize" className="titlebutton button minimize" onClick={this.minimizeWindow}>
-                            <img src={gtkTheme()?.iconMap["window-minimize-symbolic"]}/>
+                            <i className="gtk-icon-theme"/>
                         </div>
                         <div id="window-maximize" className="titlebutton button maximize" onClick={this.maximizeWindow}>
-                            <img src={gtkTheme()?.iconMap["window-maximize-symbolic"]}/>
+                            <i className="gtk-icon-theme"/>
                         </div>
                         <div id="window-close" className="titlebutton button close" onClick={this.closeWindow}>
-                            <img src={gtkTheme()?.iconMap["window-close-symbolic"]}/>
+                            <i className="gtk-icon-theme"/>
                         </div>
                     </div>
                 </div>
                 <div className={C("searchbar", styles.searchbar)}>
                     <div className="revealer">
-                        <div className="box center">
-                            <input placeholder="search" className={"view"}/>
+                        <div className="box center-item">
+                            <input placeholder="search" className=""/>
                         </div>
                     </div>
                 </div>
-                <div className="scrolledwindow">
+                <div className={C("scrolledwindow", styles.scrolledwindow)}>
                     <div className={C("treeview", "view", styles.treeview)}>
                         <div className={C(styles.header, "header")}>
                             <ListHeader/>
@@ -121,7 +120,7 @@ class Home extends Component<Props> {
                             <List depth={0} items={processes}/>
                         </div>
                     </div>
-                    <div className="scrollbar vertical overlay-indicator">
+                    <div className={C("scrollbar vertical overlay-indicator", styles.scrollbar)}>
                         <div className="slider"/>
                         <div className="trough"/>
                     </div>

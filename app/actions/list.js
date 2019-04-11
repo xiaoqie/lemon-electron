@@ -1,16 +1,18 @@
+import * as path from 'path';
 import type { GetState, Dispatch } from '../reducers/types';
 import {getDisplayName} from "../utils/name";
-import {stringCompare} from "../utils";
+import {formatBytes, stringCompare} from "../utils";
+import * as gnome from "../utils/gnome";
 
 export const LIST_SORT = "LIST_SORT";
 export const LIST_RESIZE = "LIST_RESIZE";
 export const LIST_SELECT = "LIST_SELECT";
-export const GENERATE_LIST = "GENERATE_LIST";
+export const LIST_UNCOLLAPSE = "LIST_UNCOLLAPSE";
 
-export function generateList(processes, sort) {
+export function generateList(processes, sort, expanded) {
     const listItems = [];
     const {col, reverse} = sort;
-    const appendList = (items) => {
+    const appendList = (items, depth=0) => {
         let pids = Object.keys(items);
         if (Object.keys(items).length === 0) {
             return;
@@ -56,14 +58,39 @@ export function generateList(processes, sort) {
         for (const pid of pids) {
             const process = items[pid];
             const item = {};
-            item.arrow = false;
-            item.icon = "";
+            item.depth = depth  - 1;
+            item.cmdline = process.cmdline;
+            item.icon = gnome.getIconURL(process);
             item.name = getDisplayName(process);
-            listItems.push(item);
+            if (process.type === 'terminal') {
+                item.name += ` [@.../${path.basename(process.cwd)}]`
+            }
+            item.pid = process.pid;
+            item.selectable = process.type !== 'group';
+            if (process.type !== 'group') {
+                item.collapsable = Object.keys(process.children).length !== 0;
+                if (process.type !== 'service') {
+                    item.displayPid = process.pid;
+                }
+                item.cpu = `${(process.cpu_usage / 4 * 100.0).toFixed(0)}%`;
+                item.mem = formatBytes(process.mem, 1);
+                item.disk = `${formatBytes(process.disk_total * 1024, 1)}/s`;
+                item.net = `${formatBytes(process.net_total * 1024, 1)}/s`;
+                item.gpu = `${(process.gpu_usage_total).toFixed(0)}%`;
+                item.vram = formatBytes(process.gpu_memory_used * 1024 * 1024, 1);
+            } else {
+                item.icon = 'none';
+                item.depth += 1;
+                item.collapsable = false;
+            }
+            item.expanded = expanded && expanded.includes(process.pid);
+            if (process.type !== 'group' || Object.keys(process.children).length !== 0) {
+                listItems.push(item);
+            }
 
-            const expanded = process.type === 'group';
-            if (Object.keys(process.children) !== 0 && expanded) {
-                appendList(process.children);
+            const isExpanded = process.type === 'group' || item.expanded;
+            if (Object.keys(process.children) !== 0 && isExpanded) {
+                appendList(process.children, depth + 1);
             }
         }
     };
@@ -80,7 +107,8 @@ export const listSortClick = newCol => (dispatch: Dispatch, getState: GetState) 
             type: LIST_SORT,
             payload: {
                 col: newCol,
-                reverse: true
+                reverse: true,
+                allState: getState()
             }
         });
     } else {
@@ -88,7 +116,8 @@ export const listSortClick = newCol => (dispatch: Dispatch, getState: GetState) 
             type: LIST_SORT,
             payload: {
                 col: newCol,
-                reverse: !reverse
+                reverse: !reverse,
+                allState: getState()
             }
         });
     }
@@ -112,5 +141,14 @@ export const listSelect = pid => dispatch => {
         type: LIST_SELECT,
         payload: pid
     })
-}
+};
 
+export const listUncollapse = pid => (dispatch: Dispatch, getState: GetState) => {
+    dispatch({
+        type: LIST_UNCOLLAPSE,
+        payload: {
+            pid: pid,
+            allState: getState()
+        }
+    })
+};

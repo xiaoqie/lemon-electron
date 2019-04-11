@@ -101,7 +101,7 @@ export function getIconURL(proc) {
     }
     const iconFile = gtkTheme()?.iconMap[icon];
     if (!iconFile) {
-        return 'file://' + path.resolve(__dirname, 'gtk-theme/fallback-icons/scalable/mimetypes/application-x-executable-symbolic.svg');
+        return 'file://' + path.resolve(__dirname, 'gtk/icons/scalable/mimetypes/application-x-executable-symbolic.svg');
     }
     return `file://${iconFile}`;
 }

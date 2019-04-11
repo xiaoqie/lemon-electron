@@ -13,9 +13,9 @@
 import {app, BrowserWindow} from 'electron';
 import {autoUpdater} from 'electron-updater';
 import log from 'electron-log';
-import * as path from "path";
-import {spawn} from "child_process";
 import MenuBuilder from './menu';
+
+app.commandLine.appendSwitch('js-flags', '--expose_gc');
 
 export default class AppUpdater {
     constructor() {

@@ -21,6 +21,7 @@ const store = configureStore({
             {col: "gpu-usage", width: 80},
             {col: "gpu-mem", width: 100},
         ],
+        listItems: [], currentSelection: null, expanded: []
     },
     config: {
         netBandwidth: 100 * 1024 * 1024 / 8,
@@ -61,20 +62,21 @@ const store = configureStore({
             "(systemd)"
         ],
         "guiSpawners":
-        [
-            "(gnome-shell)"
-        ],
+            [
+                "(gnome-shell)"
+            ],
         "wineApps":
-        [
-            "wine-preloader",
-            "wineserver.real"
-        ]
+            [
+                "wine-preloader",
+                "wineserver.real"
+            ]
     }
 });
 
 const port = 8089;
 websocket.connect(`ws://127.0.0.1:${port}`, log => {
     store.dispatch(receiveLog(log));
+    global.gc();
 });
 
 render(

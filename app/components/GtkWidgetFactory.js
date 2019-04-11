@@ -91,7 +91,7 @@ export default class GtkWidgetFactory extends Component<Props> {
 
     render() {
         return (
-            <div className="window decoration csd">
+            <div className="main-window window decoration csd">
                 <div id="combobox-menu-1" className="window background csd popup">
                     <div className="menu decoration">
                         <div className="menuitem vertical-center">
@@ -154,20 +154,17 @@ export default class GtkWidgetFactory extends Component<Props> {
                     </div>
                     <div className="box horizontal title-right spacing-6">
                         <div className="button image-button toggle popup center-item" target="popover-menu-1">
-                            <img src={gtkTheme()?.iconMap["open-menu-symbolic"]}/>
+                            <i className="gtk-icon-theme">open_menu_symbolic</i>
                         </div>
-                        <div className="separator"/>
+                        <div className="separator vertical"/>
                         <div id="window-minimize" className="titlebutton button minimize">
-                            {/*style={{backgroundImage: `url(${gtkTheme()?.iconMap["window-minimize-symbolic"]})`}}*/}
-                            <img src={gtkTheme()?.iconMap["window-minimize-symbolic"]}/>
+                            <i className="gtk-icon-theme"/>
                         </div>
                         <div id="window-maximize" className="titlebutton button maximize">
-                            {/*// style={{backgroundImage: `url(${gtkTheme()?.iconMap["window-maximize-symbolic"]})`}}*/}
-                            <img src={gtkTheme()?.iconMap["window-maximize-symbolic"]}/>
+                            <i className="gtk-icon-theme"/>
                         </div>
                         <div id="window-close" className="titlebutton button close">
-                            {/*// style={{backgroundImage: `url(${gtkTheme()?.iconMap["window-close-symbolic"]})`}}*/}
-                            <img src={gtkTheme()?.iconMap["window-close-symbolic"]}/>
+                            <i className="gtk-icon-theme"/>
                         </div>
                     </div>
                 </div>
@@ -182,6 +179,22 @@ export default class GtkWidgetFactory extends Component<Props> {
                     <div className="box vertical spacing-10 container-border-10">
                         <div className="box horizontal spacing-6">
                             <div className="box vertical spacing-10">
+                                <div className="combobox horizontal linked" target="combobox-menu-1">
+                                    <input className="flex-grow" value="comboboxentry"/>
+                                    <div className="button combo toggle center-item horizontal">
+                                        <div className="arrow icon right"
+                                             style={{backgroundImage: `url(${gtkTheme()?.iconMap["pan-down-symbolic"]})`}}>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="combobox horizontal linked">
+                                    <input className="flex-grow disabled" value="comboboxentry" disabled/>
+                                    <div className="button combo toggle center-item horizontal disabled" disabled>
+                                        <div className="arrow icon right"
+                                             style={{backgroundImage: `url(${gtkTheme()?.iconMap["pan-down-symbolic"]})`}}>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div className="combobox" target="combobox-menu-1">
                                     <div className="button combo toggle center-item horizontal">
                                         <div className="label">
@@ -230,24 +243,8 @@ export default class GtkWidgetFactory extends Component<Props> {
                                         </div>
                                     </div>
                                 </div>
-                                <input/>
-                                <input className="disabled" disabled/>
-                                <div className="combobox horizontal linked" target="combobox-menu-1">
-                                    <input className="flex-grow"/>
-                                    <div className="button combo toggle center-item horizontal">
-                                        <div className="arrow icon right"
-                                             style={{backgroundImage: `url(${gtkTheme()?.iconMap["pan-down-symbolic"]})`}}>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="combobox horizontal linked">
-                                    <input className="flex-grow disabled" disabled/>
-                                    <div className="button combo toggle center-item horizontal disabled" disabled>
-                                        <div className="arrow icon right"
-                                             style={{backgroundImage: `url(${gtkTheme()?.iconMap["pan-down-symbolic"]})`}}>
-                                        </div>
-                                    </div>
-                                </div>
+                                <input value="entry"/>
+                                <input value="entry" className="disabled" disabled/>
                                 <div className="horizontal box spacing-6">
                                     <div className="label vertical-center">label</div>
                                     <div className="label vertical-center disabled" disabled>label</div>
@@ -320,9 +317,12 @@ export default class GtkWidgetFactory extends Component<Props> {
                                             <div className="label vertical-center">radiobutton</div>
                                         </div>
                                     </div>
+                                    <div className="vertical box spacing-10">
+                                        <div className="spinner"/>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="separator"/>
+                            <div className="separator vertical"/>
                             <div className="box vertical spacing-10">
                                 <div className="button text-button toggle center-item checked">
                                     <div className="label">
@@ -339,10 +339,53 @@ export default class GtkWidgetFactory extends Component<Props> {
                                         togglebutton
                                     </div>
                                 </div>
+                                <div className="switch checked">
+                                    <div className="slider"></div>
+                                </div>
                             </div>
-                            <div className="separator"/>
+                            <div className="separator vertical"/>
+                            <div className="box vertical spacing-10" style={{width: "150px"}}>
+                                <div className="progressbar horizontal">
+                                    <div className="trough full-width">
+                                        <div className="progress"/>
+                                    </div>
+                                </div>
+                                <div className="levelbar continuous horizontal">
+                                    <div className="trough full-width">
+                                        <div className="block high"/>
+                                    </div>
+                                </div>
+                                <div className="scale horizontal">
+                                    <div className="contents">
+                                        <div className="trough full-width">
+                                            <div className="slider"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="scale horizontal marks-after">
+                                    <div className="contents">
+                                        <div className="trough full-width">
+                                            <div className="slider"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="box horizontal spacing-10" style={{height: "100px"}}>
+                                    <div className="progressbar vertical">
+                                        <div className="trough full-height">
+                                            <div className="progress full-height"/>
+                                        </div>
+                                    </div>
+                                    <div className="scale vertical">
+                                        <div className="contents full-height">
+                                            <div className="trough full-height">
+                                                <div className="slider"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="separator"/>
+                        <div className="separator horizontal"/>
                         <div className="box"></div>
                     </div>
                 </div>

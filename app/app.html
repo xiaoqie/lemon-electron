@@ -21,9 +21,14 @@
             require("electron").remote.getCurrentWindow().on('blur', () => {
                 document.getElementById("root").classList.add("backdrop");
             });
+            require("electron").remote.getCurrentWindow().on('maximize', () => {
+                document.getElementById("root").classList.add("maximized");
+            });
+            require("electron").remote.getCurrentWindow().on('unmaximize', () => {
+                document.getElementById("root").classList.remove("maximized");
+            });
         </script>
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
         <style>
             .loading {
                 width: 50vh;

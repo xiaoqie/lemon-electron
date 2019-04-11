@@ -254,10 +254,6 @@ export const receiveLog = log => (dispatch, getState) => {
     const processedLog = Object.keys(log).length !== 0 ? process(log, getState().config) : {};
     dispatch({
         type: RECEIVE_LOG,
-        payload: processedLog
-    });
-    dispatch({
-        type: GENERATE_LIST,
-        payload: getState()
+        payload: {...getState(), log: processedLog}
     });
 };

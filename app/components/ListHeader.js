@@ -43,17 +43,14 @@ class HeaderColumn extends Component<Props> {
                  style={{
                      width: `${width}px`,
                  }}>
-                <div onClick={sortClick} className={C(styles.content)}
-                     style={{
-                         backgroundImage: do {
-                             if (intensity) {
-                                 // `rgba(${[255, 255 * (1 - intensity), 255 * (1 - intensity), 0.3].join(',')})`
-                                 `linear-gradient(transparent 95%, ${color} 95%)`
-                             } else {
-                                 'rgba(255, 255, 255, 0)'
-                             }
-                         }
-                     }}>
+                {do {
+                    if (intensity) {
+                        <div className={styles.colorIndicator} style={{
+                            width: `${intensity * 100}%`,
+                        }}/>
+                    }
+                }}
+                <div onClick={sortClick} className={C(styles.content)}>
                     {children}
                 </div>
                 <div ref={this.handle} className={styles.separator} onMouseDown={this.onMouseDown}/>
@@ -74,6 +71,7 @@ class ListHeader extends Component<Props> {
         const {layout} = list;
 
         const content = [];
+        const calcIntensity = (x, max) => x / max;
         for (let i = 0; i < layout.length; i++) {
             const {width, col} = layout[i];
             const onResize = (w) => {
@@ -107,10 +105,10 @@ class ListHeader extends Component<Props> {
                         </div>
                     </HeaderColumn>);
                     break;
-                case "cpu":
+                case "cpu": {
                     const cpuUsage = log.sys.cpus.cpu / log.sys.ncpus;
                     content.push(<HeaderColumn key="header_cpu" width={width} onResize={onResize}
-                                               intensity={calcIntensity(cpuUsage, 0.8)}
+                                               intensity={calcIntensity(cpuUsage, 1)}
                                                sortClick={() => sortClick(col)}>
                         <div className={styles.indicator}>{(cpuUsage * 100.0).toFixed(0)}%</div>
                         <div className={styles.title}>
@@ -119,10 +117,11 @@ class ListHeader extends Component<Props> {
                         </div>
                     </HeaderColumn>);
                     break;
-                case "mem":
+                }
+                case "mem": {
                     const memUsage = 1 - log.sys.MemAvailable / log.sys.MemTotal;
                     content.push(<HeaderColumn key="header_mem" width={width} onResize={onResize}
-                                               intensity={calcIntensity(memUsage, 0.8)}
+                                               intensity={calcIntensity(memUsage, 1)}
                                                sortClick={() => sortClick(col)}>
                         <div className={styles.indicator}>{(memUsage * 100.0).toFixed(0)}%</div>
                         <div className={styles.title}>
@@ -131,13 +130,14 @@ class ListHeader extends Component<Props> {
                         </div>
                     </HeaderColumn>);
                     break;
-                case "disk":
+                }
+                case "disk": {
                     const diskUsage = Object.entries(log.sys.diskstats)
                         .filter(([name, disk]) => log.lsblk.blockdevices.find(device => device.name === name && device.type === "disk"))
                         .map(([name, disk]) => disk.usage).reduce((sum, x) => sum + x);
 
                     content.push(<HeaderColumn key="header_disk" width={width} onResize={onResize}
-                                               intensity={calcIntensity(diskUsage, 0.8)}
+                                               intensity={calcIntensity(diskUsage, 1)}
                                                sortClick={() => sortClick(col)}>
                         <div className={styles.indicator}>{(diskUsage * 100.0).toFixed(1)}%</div>
                         <div className={styles.title}>
@@ -146,11 +146,12 @@ class ListHeader extends Component<Props> {
                         </div>
                     </HeaderColumn>);
                     break;
-                case "net":
+                }
+                case "net": {
                     const netSpeed = log.sys.net_receive_speed + log.sys.net_transmit_speed;
                     content.push(<HeaderColumn key="header_net" width={width} onResize={onResize}
                                                intensity={config.netBandwidth ?
-                                                   calcIntensity(netSpeed / config.netBandwidth, 0.8) :
+                                                   calcIntensity(netSpeed / config.netBandwidth, 1) :
                                                    calcIntensity(netSpeed, 1024 * 1024)}
                                                sortClick={() => sortClick(col)}>
                         <div className={styles.indicator}>{config.netBandwidth ?
@@ -162,10 +163,11 @@ class ListHeader extends Component<Props> {
                         </div>
                     </HeaderColumn>);
                     break;
-                case "gpu-usage":
+                }
+                case "gpu-usage": {
                     const gpuUsage = log.sys.nv_gpu_usage / 100;
                     content.push(<HeaderColumn key="header_gu" width={width} onResize={onResize}
-                                               intensity={calcIntensity(gpuUsage, 0.8)}
+                                               intensity={calcIntensity(gpuUsage, 1)}
                                                sortClick={() => sortClick(col)}>
                         <div className={styles.indicator}>{(gpuUsage * 100).toFixed(0)}%</div>
                         <div className={styles.title}>
@@ -174,10 +176,11 @@ class ListHeader extends Component<Props> {
                         </div>
                     </HeaderColumn>);
                     break;
-                case "gpu-mem":
+                }
+                case "gpu-mem": {
                     const gpuMem = 1 - log.sys.gpu_memory_free / log.sys.gpu_memory_total;
                     content.push(<HeaderColumn key="header_gm" width={width} onResize={onResize}
-                                               intensity={calcIntensity(gpuMem, 0.8)}
+                                               intensity={calcIntensity(gpuMem, 1)}
                                                sortClick={() => sortClick(col)}>
                         <div className={styles.indicator}>{(gpuMem * 100.0).toFixed(0)}%</div>
                         <div className={styles.title}>
@@ -186,6 +189,7 @@ class ListHeader extends Component<Props> {
                         </div>
                     </HeaderColumn>);
                     break;
+                }
                 default:
 
             }

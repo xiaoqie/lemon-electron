@@ -1,6 +1,6 @@
 import _getTheme from './gtk-theme';
 
-export default async function loadTheme(config = {outputPath: __dirname}) {
+export default async function loadTheme(config = {dataDir: __dirname, outputDir: __dirname}) {
     const result = await _getTheme(config);
 
     if (!document.getElementById("gtk-theme")) {

@@ -162,9 +162,13 @@ input {
 
 .window {
     background: transparent !important;
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
     //overflow: hidden;
+}
+
+.main-window {
+    overflow: hidden;
+    display: grid;
+    //grid-template-rows: auto minmax(0, 1fr);
 }
 
 .check, .radio {
@@ -191,4 +195,49 @@ input {
     .slider {
         z-index: 100;
     }
+}
+
+.gtk-icon-theme {
+    //display: inline-block;
+    font-size: 16px;
+    line-height: 16px;
+    height: 16px;
+    vertical-align: middle;
+    margin: 0 auto;
+    text-align: center;
+    justify-self: center;
+    align-self: center;
+}
+
+.switch {
+    display: flex;
+    .slider {
+        flex-grow: 0;
+        //width: 24px;
+        //height: 24px;
+    }
+}
+
+.scale {
+    position: relative;
+    display: block;
+    .slider {
+        position: absolute;
+    }
+}
+
+.trough {
+    min-height: 2px;  // I'm not exactly sure
+}
+
+.full-width {
+    width: 100%;
+}
+
+.full-height {
+    height: 100%;
+}
+
+input.disabled {
+    background-color: inherit;  // some theme didn't set color when entry is disabled
 }
