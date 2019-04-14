@@ -28,23 +28,35 @@
     //display: flex;
 }
 
+.horizontal.grid.box {
+    display: grid;
+    grid-auto-flow: column;
+
+
+    @for $i from 1 through 32 {
+        &.spacing-#{$i} {
+            grid-column-gap: 6px;
+        }
+    }
+}
+
 .horizontal {
     display: flex;
     flex-direction: row;
 
     @for $i from 1 through 32 {
         &.spacing-#{$i*2} > * {
-           margin-left: $i + 0px;
-           margin-right: $i + 0px;
+            margin-left: $i + 0px;
+            margin-right: $i + 0px;
 
-           &:first-child {
-               margin-left: 0;
-           }
+            &:first-child {
+                margin-left: 0;
+            }
 
-           &:last-child {
-               margin-right: 0;
-           }
-       }
+            &:last-child {
+                margin-right: 0;
+            }
+        }
     }
 }
 
@@ -70,8 +82,8 @@
 
 input {
     min-height: 24px;
-    padding-top: 0 !important;  // gtk's entry padding seems different from html input padding
-    padding-bottom: 0 !important;  // gtk's entry padding seems different from html input padding
+    padding-top: 0 !important; // gtk's entry padding seems different from html input padding
+    padding-bottom: 0 !important; // gtk's entry padding seems different from html input padding
 }
 
 .header-bar {
@@ -125,6 +137,7 @@ input {
 
 .button {
     .icon {
+        display: flex;
         width: 16px;
         height: 16px;
 
@@ -143,6 +156,7 @@ input {
     //position: absolute;
     //box-shadow: 0px 0px 3px 1px rgba(0,0,0,0.8); // box shadow doesn't match the theme!
 }
+
 .popup.window {
     position: absolute;
     display: none;
@@ -172,7 +186,7 @@ input {
 }
 
 .check, .radio {
-    margin: 0 4px;  // some themes didn't set this
+    margin: 0 4px; // some themes didn't set this
 }
 
 .scrolledwindow {
@@ -187,13 +201,15 @@ input {
 
     .trough {
         z-index: 10;
-        position: absolute;
+        position: relative;
         height: 100%;
         width: 100%;
     }
 
     .slider {
+        position: relative;
         z-index: 100;
+        transition: unset !important;
     }
 }
 
@@ -211,6 +227,7 @@ input {
 
 .switch {
     display: flex;
+
     .slider {
         flex-grow: 0;
         //width: 24px;
@@ -221,13 +238,14 @@ input {
 .scale {
     position: relative;
     display: block;
+
     .slider {
         position: absolute;
     }
 }
 
 .trough {
-    min-height: 2px;  // I'm not exactly sure
+    min-height: 2px; // I'm not exactly sure
 }
 
 .full-width {
@@ -239,5 +257,25 @@ input {
 }
 
 input.disabled {
-    background-color: inherit;  // some theme didn't set color when entry is disabled
+    background-color: inherit; // some theme didn't set color when entry is disabled
+}
+
+.searchbar {
+    overflow: hidden;
+}
+
+.searchbar:not(.revealed) {
+    height: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+}
+
+.menu .menuitem .pre-label,
+.menu .menuitem .after-label
+{  // not written in gtk theme?
+    min-width: 16px;
+    width: 16px;
+    min-height: 1px;
+    padding: inherit;
 }

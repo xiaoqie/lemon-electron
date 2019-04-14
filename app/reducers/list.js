@@ -1,5 +1,12 @@
 // @flow
-import {GENERATE_LIST, generateList, LIST_RESIZE, LIST_SELECT, LIST_SORT, LIST_UNCOLLAPSE} from "../actions/list";
+import {
+    generateList,
+    LIST_RESIZE,
+    LIST_SCROLL,
+    LIST_SELECT,
+    LIST_SORT,
+    LIST_UNCOLLAPSE, LIST_VIEWPORT_RESIZE
+} from "../actions/list";
 import type { Action } from './types';
 import {RECEIVE_LOG} from "../actions/log";
 
@@ -7,7 +14,7 @@ function onGenerateList(allState) {
     return generateList(allState.log.processes, allState.list.sort, allState.list.expanded);
 }
 
-export default function list(state={listItems: [], sort: {}, layout: {}, currentSelection: null, expanded: []}, action: Action) {
+export default function list(state={listItems: [], sort: {}, layout: {}, currentSelection: null, expanded: [], scroll: 0}, action: Action) {
     switch (action.type) {
         case LIST_SORT: {
             const {allState} = action.payload;
@@ -45,6 +52,18 @@ export default function list(state={listItems: [], sort: {}, layout: {}, current
                 ...state,
                 expanded: expanded,
                 listItems: generateList(allState.log.processes, allState.list.sort, expanded)
+            }
+        }
+        case LIST_SCROLL: {
+            return {
+                ...state,
+                scroll: action.payload
+            }
+        }
+        case LIST_VIEWPORT_RESIZE: {
+            return {
+                ...state,
+                viewportHeight: action.payload
             }
         }
         default:

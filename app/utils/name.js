@@ -50,7 +50,7 @@ export function distillCmdline(cmdline) {
 }
 
 function distillCmdlineForWine(cmdline) {
-    return distillCmdline(cmdline.replace(/\\/g, '/'));
+    return distillCmdline(cmdline.replace(/Program Files/g, 'Program_Files').replace(/\\/g, '/'));
 }
 
 export function parseComm(comm) {
@@ -68,9 +68,8 @@ export function parseComm(comm) {
 }
 
 export function getDisplayName(proc) {
-    let fromCmdline;
     const fromComm = parseComm(proc.comm);
-    let displayName;
+    let fromCmdline;
     if (proc.cmdline) {
         if (proc.type !== 'wine') {
             fromCmdline = distillCmdline(proc.cmdline);
@@ -78,6 +77,7 @@ export function getDisplayName(proc) {
             fromCmdline = distillCmdlineForWine(proc.cmdline);
         }
     }
+    let displayName;
     if (fromCmdline && fromCmdline.includes(fromComm)) {
         displayName = fromCmdline;
     } else {

@@ -285,7 +285,9 @@
     "desktop-env": "latest",
     "postcss": "^7.0.5",
     "postcss-selector-parser": "^6.0.2",
-    "jquery": "^3.3.1"
+    "jquery": "^3.3.1",
+    "svg2ttf": "latest",
+    "svgicons2svgfont": "latest"
   },
   "devEngines": {
     "node": ">=7.x",

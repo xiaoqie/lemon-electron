@@ -28,29 +28,23 @@ input, button, textarea, * {
 $extraBodyMargin: 16px;
 
 body {
-    margin: 0;
     background: transparent !important;
 }
 
 #root {
-    padding: $extraBodyMargin;
-    width: calc(100vw - #{$extraBodyMargin} * 2);
-    height: calc(100vh - #{$extraBodyMargin} * 2);
+    padding: $extraBodyMargin !important;
+    width: calc(100vw - #{$extraBodyMargin} * 2) !important;
+    height: calc(100vh - #{$extraBodyMargin} * 2) !important;
     display: grid;
     grid-template-rows: minmax(0, 1fr);
 
     &.maximized {
-        padding: 0;
-        width: 100vw;
-        height: 100vh;
+        padding: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
 
         & .main-window {
             margin: 0;
         }
     }
-}
-
-*::-webkit-scrollbar {
-    width: 0px;  /* Remove scrollbar space */
-    background: transparent;  /* Optional: just make scrollbar invisible */
 }

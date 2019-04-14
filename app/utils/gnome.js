@@ -5,6 +5,7 @@ import * as os from "os";
 import {similarity} from "./longest-common-subsequence";
 import {distillCmdline, getDisplayName, isShell, parseComm, procUniqueID} from "./name";
 import gtkTheme from './import-gtk-theme'
+import {readdirFull} from "./index";
 
 function parseDesktop(content) {
     let currentEntry = 'Unknown';
@@ -27,28 +28,26 @@ function parseDesktop(content) {
 
 function getDesktopsEntry() {
     const desktops = [...process.env.XDG_DATA_DIRS.split(':'), path.join(os.homedir(), '.local/share')]
-        .filter(dir => fs.existsSync(path.join(dir, 'applications')))
-        .filter(dir => fs.statSync(path.join(dir, 'applications')).isDirectory())
-        .map(dir =>
-            fs.readdirSync(path.join(dir, 'applications'))
-                .map(f => path.join(dir, 'applications', f))
-                .filter(f => !fs.statSync(f).isDirectory() && path.extname(f) === '.desktop'))
-        .reduce((val, acc) => [...val, ...acc]);
+        .map(dir => path.join(dir, 'applications'))
+        .filter(dir => fs.existsSync(dir))
+        .filter(dir => fs.statSync(dir).isDirectory())
+        .map(dir => readdirFull(dir)
+            .filter(f => !fs.statSync(f).isDirectory() && path.extname(f) === '.desktop'))
+        .concatElements();
 
     return desktops.map(desktop => parseDesktop(fs.readFileSync(desktop, 'UTF-8')));
 }
 
 function getExecIconMap() {
     const desktops = getDesktopsEntry();
-    return Object.assign({},
-        ...desktops.filter(d => d['Desktop Entry'].Exec && d['Desktop Entry'].Icon)
-            .map(d => ({[distillCmdline(d['Desktop Entry'].Exec.toLowerCase())]: d['Desktop Entry'].Icon})));
+    return Object.assign(...desktops.filter(d => d['Desktop Entry'].Exec && d['Desktop Entry'].Icon)
+        .map(d => ({[distillCmdline(d['Desktop Entry'].Exec.toLowerCase())]: d['Desktop Entry'].Icon})));
 }
 
 const exec2Icon = getExecIconMap();
 console.log(exec2Icon);
 
-export function getIcon(proc) {
+export function getIcon(proc, fuzzy = false) {
     if (proc.type === 'service') {
         return "dev.saki.lemon.fallback-service";
     }
@@ -58,19 +57,16 @@ export function getIcon(proc) {
     if (isShell(getDisplayName(proc))) {
         return "dev.saki.lemon.fallback-terminal";
     }
-    const procName = distillCmdline(proc.cmdline).toLowerCase();
-    let icon = exec2Icon[procName];
-    if (!icon) {
-        icon = exec2Icon[parseComm(proc.comm).toLowerCase()];
-    }
-    if (!icon) {
+    const cmdline = distillCmdline(proc.cmdline).toLowerCase();
+    const comm = parseComm(proc.comm).toLowerCase();
+    const exe = path.basename(proc.exe).toLowerCase();
+    let icon = exec2Icon[comm] ?? exec2Icon[exe] ?? exec2Icon[cmdline];
+    if (!icon && fuzzy) {
         const minScore = 1;
         const highScore = Object.keys(exec2Icon).reduce((max, exec) => {
-            const sim = similarity(exec, procName);
+            const sim = similarity(exec, cmdline);
             return sim >= max.sim ? {sim, exec} : max;
-        }, {
-            sim: minScore
-        });
+        }, {sim: minScore});
         if (highScore.sim > 1) {
             icon = exec2Icon[highScore.exec];
         }
@@ -93,7 +89,7 @@ export function getIconURL(proc) {
     if (id in iconCache) {
         icon = iconCache[id];
     } else {
-        icon = getIcon(proc);
+        icon = getIcon(proc, proc.type === 'gui');
         iconCache[id] = icon;
     }
     if (path.isAbsolute(icon)) {
@@ -101,7 +97,7 @@ export function getIconURL(proc) {
     }
     const iconFile = gtkTheme()?.iconMap[icon];
     if (!iconFile) {
-        return 'file://' + path.resolve(__dirname, 'gtk/icons/scalable/mimetypes/application-x-executable-symbolic.svg');
+        return `file://${path.resolve(__dirname, 'gtk/icons/scalable/mimetypes/application-x-executable-symbolic.svg')}`;
     }
     return `file://${iconFile}`;
 }

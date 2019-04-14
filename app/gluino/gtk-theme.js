@@ -1,15 +1,13 @@
 import fs from 'fs';
-import {join} from 'path';
 import {homedir} from 'os';
 import {execSync} from 'child_process';
 import desktopEnv from 'desktop-env';
 import * as path from 'path';
-// import webfont from 'webfont';
 import SVGIcons2SVGFontStream from 'svgicons2svgfont';
 import svg2ttf from 'svg2ttf';
-import ttf2woff from 'ttf2woff';
-import postgtk from './postcss-gtk/postcss-gtk';
 import * as util from 'util';
+import postgtk from './postcss-gtk/postcss-gtk';
+import {readdirFull} from "../utils";
 
 function getFolder(dir) {
     try {
@@ -20,31 +18,16 @@ function getFolder(dir) {
     }
 }
 
-function readdirFull(dir) {
-    return fs.readdirSync(dir).map(f => path.join(dir, f));
-}
-
-Array.prototype.concatElements = function concatElements() {
-    return [].concat.apply([], this);
-};
-Array.prototype.mapAsync = async function mapAsync(func) {
-    return Promise.all(this.map(func));
-};
-
 async function getIconMap(rootDirs) {
-    const dirs = rootDirs
+    const icons = rootDirs                              // .../IconTheme
         .filter(f => fs.existsSync(f))
-        .map(dir => readdirFull(dir))
+        .map(dir => readdirFull(dir))                   // .../IconTheme/16x16
         .concatElements()
-        .filter(f => (fs.statSync(f)).isDirectory())
-        .concatElements();
-    const iconDirs = dirs
-        .filter(f => (fs.statSync(f)).isDirectory())
-        .map(d => readdirFull(d))
-        .concatElements();
-    const icons = iconDirs
-        .filter(f => (fs.statSync(f)).isDirectory())
-        .map(d => readdirFull(d))
+        .filter(f => fs.statSync(f).isDirectory())
+        .map(d => readdirFull(d))                       // .../IconTheme/16x16/apps
+        .concatElements()
+        .filter(f => fs.statSync(f).isDirectory())
+        .map(d => readdirFull(d))                       // .../IconTheme/16x16/apps/something.png
         .concatElements();
     const iconMap = {};
     for (const icon of icons) {
@@ -68,8 +51,7 @@ async function getIconMap(rootDirs) {
             if (parts.length !== 2 || parts[0] !== parts[1]) return -1;
             return parseInt(parts[0], 10) * multiplier;
         };
-        const bestIcon = iconList.sort((a: string, b: string) => score(b) - score(a))[0];
-        iconMap[icon] = bestIcon;
+        iconMap[icon] = iconList.sort((a: string, b: string) => score(b) - score(a))[0];
     }
     return iconMap;
 }
@@ -78,7 +60,7 @@ async function generateIconFont(svgs, output) {
     const fontStream = new SVGIcons2SVGFontStream({
         fontName: 'gtk-icon-theme',
         normalize: true,
-        fontHeight: 16
+        fontHeight: 1024
     });
     const pipe = fontStream.pipe(fs.createWriteStream(`${output}.svg`));
     pipe.on('error', (err) => {
@@ -101,9 +83,9 @@ async function generateIconFont(svgs, output) {
     const ttf = svg2ttf(fs.readFileSync(`${output}.svg`, 'utf8'), {});
     fs.writeFileSync(`${output}.ttf`, new Buffer(ttf.buffer));
     console.log('TTF Font successfully created!');
-/*    const woff = new Buffer(ttf2woff(new Uint8Array(fs.readFileSync(`${output}.ttf`)), {}).buffer);
-    fs.writeFileSync(`${output}.woff`, woff);
-    console.log('WOFF Font successfully created!');*/
+    // const woff = new Buffer(ttf2woff(new Uint8Array(fs.readFileSync(`${output}.ttf`)), {}).buffer);
+    // fs.writeFileSync(`${output}.woff`, woff);
+    // console.log('WOFF Font successfully created!');
 }
 
 async function getIconTheme(config) {
@@ -117,19 +99,22 @@ async function getIconTheme(config) {
     let iconTheme = execSync(`gsettings get ${schema}`, {encoding: 'utf8'})
         .split(`'`).join('').replace(/\n$/, '');
     const iconDirectory = '/usr/share/icons/';
+    const userIconDirectory = path.join(homedir(), '.local', 'share', 'icons');
     if (iconTheme.indexOf('Mint-X') > -1) {
         iconTheme = 'Mint-X';
     }
 
     const iconMap = await getIconMap([
+        path.join(userIconDirectory, iconTheme),
         path.join(iconDirectory, iconTheme),
         `/snap/${iconTheme.toLocaleLowerCase()}/current/share/icons/`,
-        // path.join(iconDirectory, 'hicolor'),
+        path.join(userIconDirectory, 'hicolor'),
+        path.join(iconDirectory, 'hicolor'),
         path.join(config.dataDir, "icons")
     ]);
 
     await generateIconFont(Object.values(iconMap).filter(f => f.endsWith("symbolic.svg")),
-        join(config.outputDir, 'gtk_icon_font'));
+        path.join(config.outputDir, 'gtk_icon_font'));
 
     return {iconMap};
 }
@@ -193,16 +178,14 @@ export default async function getTheme(config) {
         }
         if (cssString.indexOf('resource://') > -1) {
             console.log("fallback to ./gtk.css");
-            return getCSS(join(dataDir, './gtk.css'), r);
+            return getCSS(path.join(dataDir, './gtk.css'), r);
         }
         const overrides = [
             [/(url\()(")/g, `$1"${theme}/${dir}/`],
-            [/:dir\(ltr\)/g, `:not(.dir-rtl)`],
-            [/:dir\(rtl\)/g, `.dir-rtl`],
+            [/-gtk-icon-source:/g, `background-image:`],
             // [/(-gtk-scaled\()(.*)(\),)(.*)(\))/g, `$2)`],
             // [/(-gtk-recolor\()(.*)(\))/g, `$2`],
             // [/(image\(#)(.*)(\))/g, `linear-gradient(#$2, #$2)`],
-            [/-gtk-icon-source:/g, `background-image:`],
             [/-gtk-icon-shadow:/g, `text-shadow:`],
             // [/(@import url\(")([\w|\-|.|/]+)("\))/g, `$1${theme}/${dir}/$2$3`],
             // [/[^:]hover/g, 'a:hover'],
@@ -264,11 +247,11 @@ export default async function getTheme(config) {
 
     const font = getFont();
 
-    let css = "";
+    let css = `/* stylelint-disable */`;
     css += `
 @font-face {
     font-family: 'gtk-icon-theme';
-    src: url('${join(outputDir, 'gtk_icon_font.ttf')}') format('truetype');
+    src: url('${path.join(outputDir, 'gtk_icon_font.ttf')}') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
@@ -315,13 +298,13 @@ export default async function getTheme(config) {
     // css = css.replace(/@define-color(\s[a-zA-Z_\s#\d\:;\(,\.\)]+)/g, '');
 
     if (process.env.NODE_ENV === 'development') {
-        fs.writeFileSync(join(dataDir, 'gtk-generated.css'), css);
+        fs.writeFileSync(path.join(dataDir, 'gtk-generated.css'), css);
     }
 
     const result = await postgtk.process(css);
     result.css = result.css.replace(/:nth-child\(\./g, ":nth-child(");  // I don't know where introduced the weird dot after :nth-child(
     if (process.env.NODE_ENV === 'development') {
-        fs.writeFileSync(join(dataDir, 'gtk-generated-converted.css'), result.css);
+        fs.writeFileSync(path.join(dataDir, 'gtk-generated-converted.css'), result.css);
     }
     out.raw = result.css;
     return out;

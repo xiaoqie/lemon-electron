@@ -1,5 +1,6 @@
 // @flow
 import React, {Component} from 'react';
+import $ from 'jquery';
 import styles from './List.scss';
 import {connect} from "react-redux";
 import {listColResize, listSortClick} from "../actions/list";
@@ -23,7 +24,9 @@ class HeaderColumn extends Component<Props> {
     }
 
     onMouseMove(e) {
-        this.props.onResize(Math.round(Math.max(e.clientX - (this.handle.current.offsetLeft + this.handle.current.offsetWidth / 2) + this.props.width, 10)));
+        const {onResize, width} = this.props;
+        const handle = $(this.handle.current);
+        onResize(Math.round(Math.max(e.clientX - (handle.offset().left + handle.width() / 2) + width, 10)));
     }
 
     onMouseDown() {

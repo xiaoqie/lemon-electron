@@ -11,8 +11,8 @@ export function connect(url, callback) {
         };
 
         ws.onclose = () => {
-            callback({});
             console.log('disconnected');
+            callback({});
         };
 
         ws.onmessage = (data) => {
@@ -22,6 +22,8 @@ export function connect(url, callback) {
     setInterval(() => {
         if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send("heartbeat");
+        } else {
+            callback({});
         }
         tryConnect()
     }, 5000);

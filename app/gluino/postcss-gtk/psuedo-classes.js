@@ -3,7 +3,7 @@ import * as postcss from "postcss";
 import selectorParser from 'postcss-selector-parser';
 
 export default postcss.plugin('gtk-color-variables', () => (css, processor) => css.walkRules((rule) => {
-    rule.selector = selectorParser(selectors => selectors.walk(selector => {
+    const parser = selectorParser(selectors => selectors.walk(selector => {
         if (selector.type === "tag") {
             if (selector.value === "entry") {
                 selector.replaceWith(selectorParser.tag({value: "input"}));
@@ -12,7 +12,7 @@ export default postcss.plugin('gtk-color-variables', () => (css, processor) => c
             }
         } else if (selector.type === 'class') {
             if (selector.value === "hovering") {
-                selector.replaceWith(selectorParser.pseudo({value: ":hover"}));
+                // selector.replaceWith(selectorParser.pseudo({value: ":hover"}));
             } else if (selector.value === "entry") { // for ubuntu's ambiance theme
                 selector.replaceWith(selectorParser.tag({value: "input"}));
             }
@@ -49,18 +49,22 @@ export default postcss.plugin('gtk-color-variables', () => (css, processor) => c
                 default:
             }
         }
-    })).processSync(rule.selector);
+    }));
 
-    if (rule.selector.indexOf(':backdrop') !== -1) {
-        const ref = postcss.list.comma(rule.selector);
-        const selectors = [];
-        for (let i = 0; i < ref.length; i++) {
-            let selector = ref[i];
-            if (selector.indexOf(':backdrop') !== -1) {
-                selector = '.backdrop ' + selector.replace(':backdrop', '');
-            }
-            selectors.push(selector);
+    const selectors = [];
+    for (let selector of postcss.list.comma(rule.selector)) {
+        if (selector.indexOf(':backdrop') !== -1) {
+            selector = `.backdrop ${selector.replace(':backdrop', '')}`;
         }
-        rule.selector = selectors.join(',\n');
+        if (selector.includes("scrollbar")) {
+            selector = selector.replace(/:hover/g, ".hovering")
+                .replace(/:active/g, ".dragging");
+        }
+        selector = selector
+            .replace(/:dir\(ltr\)/g, `:not(.dir-rtl)`)
+            .replace(/:dir\(rtl\)/g, `.dir-rtl`);
+        selector = parser.processSync(selector);
+        selectors.push(selector);
     }
+    rule.selector = selectors.join(',\n');
 }));

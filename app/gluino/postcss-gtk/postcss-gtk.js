@@ -14,21 +14,28 @@ const gtkFunctions = functions({
         "image": (...args) => {
             if (args.length === 1) {
                 return `linear-gradient(${args[0]}, ${args[0]})`;
+            } else {
+                return args[0];
             }
+            return `image(${args.join(',')})`;
         },
         "linear-gradient": (...args) => {
             if (args.length === 1) {
                 return `linear-gradient(${args[0]}, ${args[0]})`;
-            } else {
-                return `linear-gradient(${args.join(',')})`;
             }
+            return `linear-gradient(${args.join(',')})`;
         },
-        "from": color => color,
-        "to": color => color,
+        "from": color => `${color} 0%`,
+        "to": color => `${color} 100%`,
         "color-stop": (stop, color) => `${color} ${stop*100}%`,
-        "-gtk-gradient": (...args) => {
+        "-gtk-gradient": (...args) => {  // FIXME not complete support
             console.log(args);
-            return `linear-gradient(${args.slice(3).join(',')})`;
+            if (args[0] === 'linear') {
+                return `linear-gradient(${args.slice(3).join(',')})`;
+            } else if (args[0] === 'radial') {
+                return `radial-gradient(${args.slice(5).join(',')})`;
+            }
+            return;
         },
         "-gtk-scaled": (...args) => {
             return args[0];

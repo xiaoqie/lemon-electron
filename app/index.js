@@ -21,7 +21,8 @@ const store = configureStore({
             {col: "gpu-usage", width: 80},
             {col: "gpu-mem", width: 100},
         ],
-        listItems: [], currentSelection: null, expanded: []
+        listItems: [], currentSelection: null, expanded: [],
+        scroll: 0, viewportHeight: 1080 //  I don't know, maybe higher value and viewportWidth?
     },
     config: {
         netBandwidth: 100 * 1024 * 1024 / 8,
@@ -76,7 +77,7 @@ const store = configureStore({
 const port = 8089;
 websocket.connect(`ws://127.0.0.1:${port}`, log => {
     store.dispatch(receiveLog(log));
-    global.gc();
+    // global.gc();
 });
 
 render(

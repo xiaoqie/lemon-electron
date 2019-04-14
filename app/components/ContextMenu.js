@@ -69,15 +69,19 @@ class ContextMenu extends Component<Props> {
             <div ref={this.ref} className="window background csd popup">
                 <div className="menu decoration">
                     {!isNaN(currentSelection) && document.activeElement === document.getElementById(`row_${currentSelection}`) &&
-                    <div className="menuitem vertical-center" onClick={() => this.endProcess(currentSelection)}>
+                    <div className="menuitem vertical-center horizontal" onClick={() => this.endProcess(currentSelection)}>
+                        <div className="pre-label"/>
                         <div className="label">
                             End Process
                         </div>
+                        <div className="after-label"/>
                     </div>}
-                    <div className="menuitem vertical-center" onClick={() => remote.getCurrentWindow().inspectElement(x - 1, y - 1)}>
+                    <div className="menuitem vertical-center horizontal" onClick={() => remote.getCurrentWindow().inspectElement(x - 1, y - 1)}>
+                        <div className="pre-label"/>
                         <div className="label">
                             Inspect Element
                         </div>
+                        <div className="after-label"/>
                     </div>
                 </div>
             </div>

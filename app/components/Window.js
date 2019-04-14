@@ -5,23 +5,64 @@ import List from "./List";
 import ListHeader from "./ListHeader";
 import {connect} from 'react-redux';
 import $ from 'jquery';
-import styles from './Home.scss';
+import styles from './Window.scss';
 import {C} from "../utils";
 import gtkTheme, {closeListeners} from '../utils/import-gtk-theme'
 import ContextMenu from "./ContextMenu";
 import GtkWidgetFactory from "./GtkWidgetFactory";
+import ScrollBarBase from "./ScrollBarBase";
+import {listScroll, listViewportResize} from "../actions/list";
 
 
-type Props = {};
+type Props = {
+    log: any,
+    list: any,
+    listScroll: e => void
+};
 
-class Home extends Component<Props> {
+class Scrollbar extends Component {
+    constructor() {
+        super();
+        this.ref = React.createRef();
+    }
+
+    componentDidMount() {
+        const target = $(this.props.target.current);
+        const scrollbar = $(this.ref.current.scrollbar.current);
+
+        $(target).on("wheel", e => this.ref.current.onWheel(e.originalEvent.deltaY));
+        $(target).keydown(e => {
+            if (e.which === 38) { // up
+                this.ref.current.onWheel(-35);  // probably this is the right value
+            } else if (e.which === 40) { // down
+                this.ref.current.onWheel(35);
+            } else if (e.which === 32) { // space
+                this.ref.current.onWheel(200);
+            }
+        });
+        scrollbar.css({"top": target.position().top, "height": `calc(100% - ${target.position().top}px)`});
+    }
+
+    componentDidUpdate() {
+        const {contentHeight, viewportHeight} = this.props;
+        this.ref.current.contentHeight = contentHeight;
+        this.ref.current.viewportHeight = viewportHeight;
+    }
+
+    ref;
+
+    render() {
+        const {onScroll} = this.props;
+        return <ScrollBarBase ref={this.ref} onScroll={onScroll}/>
+    }
+}
+
+class Window extends Component<Props> {
     props: Props;
-    listScrollBar;
 
     constructor() {
         super();
         this.list = React.createRef();
-        this.listLastScrollTop = 0;
     }
 
     componentDidMount() {
@@ -33,20 +74,29 @@ class Home extends Component<Props> {
         window.onbeforeunload = (e) => {
             closeListeners();
         };
+        const dispatchResizeEvent = () => {
+            const {listViewportResize} = this.props;
+            listViewportResize($(this.list.current).height());
+        };
+        this.resizeObserver = new ResizeObserver(dispatchResizeEvent);
+        this.resizeObserver.observe(this.list.current);
     }
 
     componentWillUpdate() {
-        if (this.list.current)
-            this.listLastScrollTop = this.list.current.scrollTop;
+        // if (this.list.current)
+        //     this.listLastScrollTop = this.list.current.scrollTop;
     }
 
     componentDidUpdate() {
-        if (this.list.current)
-            this.list.current.scrollTop = this.listLastScrollTop;
+        // if (this.list.current)
+        //     this.list.current.scrollTop = this.listLastScrollTop;
     }
 
     componentWillUnmount(): void {
+        this.resizeObserver.disconnect();
     }
+
+    resizeObserver;
 
     minimizeWindow() {
         remote.getCurrentWindow().minimize();
@@ -67,32 +117,13 @@ class Home extends Component<Props> {
 
     render() {
         // return <GtkWidgetFactory/>;
-        const {log} = this.props;
-        let {processes} = log;
-        // console.log(sys);
-        // console.log(proc);
-        if (!processes || !gtkTheme()) {
-            return (<div className="loading">Connecting...</div>);
-        } else {
-            // if (!this.listScrollBar && this.list.current)
-            //     this.listScrollBar = new PerfectScrollbar(this.list.current);
-        }
-
-        processes = {...processes};
-        // filter out non-genesis processes to pass to <List>
-        for (const pid in processes) {
-            const p = processes[pid];
-            if (!p.isGenesis) {
-                delete processes[pid];
-            }
-        }
-
+        const {list, listScroll} = this.props;
         return (
             <div className={C(styles.container, "main-window", "window", "background", "decoration", "csd")}>
                 <ContextMenu/>
                 <div className="header-bar headerbar titlebar">
                     <div className="title-center title label">Lemonitor</div>
-                    <div className="box horizontal title-right spacing-6">
+                    <div className="grid box horizontal title-right spacing-6">
                         <div id="window-minimize" className="titlebutton button minimize" onClick={this.minimizeWindow}>
                             <i className="gtk-icon-theme"/>
                         </div>
@@ -117,13 +148,14 @@ class Home extends Component<Props> {
                             <ListHeader/>
                         </div>
                         <div ref={this.list} className={C(styles.list, "background")}>
-                            <List depth={0} items={processes}/>
+                            <List height={list.viewportHeight}/>
                         </div>
                     </div>
-                    <div className={C("scrollbar vertical overlay-indicator", styles.scrollbar)}>
-                        <div className="slider"/>
-                        <div className="trough"/>
-                    </div>
+                    <Scrollbar ref={this.scrollbar}
+                               contentHeight={list.listItems.length * 32} // FIXME: what if not 32?
+                               viewportHeight={list.viewportHeight}
+                               target={this.list}
+                               onScroll={e => listScroll(e)}/>
                 </div>
             </div>
         );
@@ -131,5 +163,6 @@ class Home extends Component<Props> {
 }
 
 export default connect(state => ({
-    log: state.log
-}), null)(Home);
+    log: state.log,
+    list: state.list
+}), {listScroll, listViewportResize})(Window);

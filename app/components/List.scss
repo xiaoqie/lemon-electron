@@ -146,6 +146,7 @@
     box-sizing: border-box;
     padding: 0 !important;
     flex: 1 0 auto;
+    transition: unset !important;
 
     .content {
         &.indicator {

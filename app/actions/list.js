@@ -8,8 +8,11 @@ export const LIST_SORT = "LIST_SORT";
 export const LIST_RESIZE = "LIST_RESIZE";
 export const LIST_SELECT = "LIST_SELECT";
 export const LIST_UNCOLLAPSE = "LIST_UNCOLLAPSE";
+export const LIST_SCROLL = "LIST_SCROLL";
+export const LIST_VIEWPORT_RESIZE = "LIST_VIEWPORT_RESIE"
 
 export function generateList(processes, sort, expanded) {
+    if (!processes) return [];
     const listItems = [];
     const {col, reverse} = sort;
     const appendList = (items, depth=0) => {
@@ -152,3 +155,17 @@ export const listUncollapse = pid => (dispatch: Dispatch, getState: GetState) =>
         }
     })
 };
+
+export const listScroll = scroll => (dispatch: Dispatch) => {
+    dispatch({
+        type: LIST_SCROLL,
+        payload: scroll
+    })
+};
+
+export const listViewportResize = height => (dispatch: Dispatch) => {
+    dispatch({
+        type: LIST_VIEWPORT_RESIZE,
+        payload: height
+    })
+}

@@ -1,3 +1,6 @@
+import * as fs from 'fs';
+import * as path from 'path';
+
 export function formatBytes(bytes, digits) {
     // if (bytes < 1024) return bytes + " Bytes";
     if (bytes < 1048576) return (bytes / 1024).toFixed(digits) + " KiB";
@@ -30,4 +33,15 @@ export function stringCompare(a: string, b: string): number {
     if (a > b) return -1;
     if (a < b) return 1;
 }
+
+export function readdirFull(dir) {
+    return fs.readdirSync(dir).map(f => path.join(dir, f));
+}
+
+Array.prototype.concatElements = function concatElements() {
+    return [].concat.apply([], this);
+};
+Array.prototype.mapAsync = async function mapAsync(func) {
+    return Promise.all(this.map(func));
+};
 
