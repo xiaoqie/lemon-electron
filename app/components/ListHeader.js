@@ -46,13 +46,13 @@ class HeaderColumn extends Component<Props> {
                  style={{
                      width: `${width}px`,
                  }}>
-                {do {
+{/*                {do {
                     if (intensity) {
                         <div className={styles.colorIndicator} style={{
                             width: `${intensity * 100}%`,
                         }}/>
                     }
-                }}
+                }}*/}
                 <div onClick={sortClick} className={C(styles.content)}>
                     {children}
                 </div>
@@ -168,7 +168,7 @@ class ListHeader extends Component<Props> {
                     break;
                 }
                 case "gpu-usage": {
-                    const gpuUsage = log.sys.nv_gpu_usage / 100;
+                    const gpuUsage = log.sys.nv_gpu_usage;
                     content.push(<HeaderColumn key="header_gu" width={width} onResize={onResize}
                                                intensity={calcIntensity(gpuUsage, 1)}
                                                sortClick={() => sortClick(col)}>

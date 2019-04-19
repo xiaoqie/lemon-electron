@@ -1,17 +1,17 @@
 // @flow
 import React, {Component} from 'react';
 import {remote} from 'electron';
-import List from "./List";
-import ListHeader from "./ListHeader";
 import {connect} from 'react-redux';
 import $ from 'jquery';
+import List from "./List";
+import ListHeader from "./ListHeader";
 import styles from './Window.scss';
 import {C} from "../utils";
 import gtkTheme, {closeListeners} from '../utils/import-gtk-theme'
 import ContextMenu from "./ContextMenu";
 import GtkWidgetFactory from "./GtkWidgetFactory";
-import ScrollBarBase from "./ScrollBarBase";
-import {listScroll, listViewportResize} from "../actions/list";
+import ScrollbarBase from "./ScrollbarBase";
+import * as ListAction from "../actions/list";
 
 
 type Props = {
@@ -53,7 +53,7 @@ class Scrollbar extends Component {
 
     render() {
         const {onScroll} = this.props;
-        return <ScrollBarBase ref={this.ref} onScroll={onScroll}/>
+        return <ScrollbarBase ref={this.ref} onScroll={onScroll}/>
     }
 }
 
@@ -66,14 +66,11 @@ class Window extends Component<Props> {
     }
 
     componentDidMount() {
-        $(window).click(e => {
-            // FIXME: this solution is not good enough
-            $(".popup.window").hide();
-            $(".popover").hide();
-        });
-        window.onbeforeunload = (e) => {
-            closeListeners();
-        };
+        /*        $(window).click(e => {
+                    // FIXME: this solution is not good enough
+                    $(".popup.window").hide();
+                    $(".popover").hide();
+                });*/
         const dispatchResizeEvent = () => {
             const {listViewportResize} = this.props;
             listViewportResize($(this.list.current).height());
@@ -116,7 +113,6 @@ class Window extends Component<Props> {
     }
 
     render() {
-        // return <GtkWidgetFactory/>;
         const {list, listScroll} = this.props;
         return (
             <div className={C(styles.container, "main-window", "window", "background", "decoration", "csd")}>
@@ -165,4 +161,4 @@ class Window extends Component<Props> {
 export default connect(state => ({
     log: state.log,
     list: state.list
-}), {listScroll, listViewportResize})(Window);
+}), {listScroll: ListAction.listScroll, listViewportResize: ListAction.listViewportResize})(Window);

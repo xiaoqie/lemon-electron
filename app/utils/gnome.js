@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import {similarity} from "./longest-common-subsequence";
-import {distillCmdline, getDisplayName, isShell, parseComm, procUniqueID} from "./name";
+import {distillCmdline, getDisplayName, isInterpreter, isShell, parseComm, procUniqueID} from "./name";
 import gtkTheme from './import-gtk-theme'
 import {readdirFull} from "./index";
 
@@ -38,26 +38,45 @@ function getDesktopsEntry() {
     return desktops.map(desktop => parseDesktop(fs.readFileSync(desktop, 'UTF-8')));
 }
 
-function getExecIconMap() {
+function getMaps() {
     const desktops = getDesktopsEntry();
-    return Object.assign(...desktops.filter(d => d['Desktop Entry'].Exec && d['Desktop Entry'].Icon)
+    const execIconMap = Object.assign(...desktops.filter(d => d['Desktop Entry'].Exec && d['Desktop Entry'].Icon)
         .map(d => ({[distillCmdline(d['Desktop Entry'].Exec.toLowerCase())]: d['Desktop Entry'].Icon})));
+    execIconMap['chrome'] = 'chrome';
+    execIconMap['python'] = 'python';
+    execIconMap['java'] = 'java';
+    execIconMap['python3'] = 'python';
+    execIconMap['python2'] = 'python';
+
+    const execDescriptionMap = Object.assign(...desktops.filter(d => d['Desktop Entry'].Exec && d['Desktop Entry'].Name)
+        .map(d => ({[distillCmdline(d['Desktop Entry'].Exec.toLowerCase())]: d['Desktop Entry'].Name})));
+    return {exec2Icon: execIconMap, exec2Description: execDescriptionMap};
 }
 
-const exec2Icon = getExecIconMap();
+function getExecDescriptionMap() {
+    const desktops = getDesktopsEntry();
+}
+
+const {exec2Icon, exec2Description} = getMaps();
 console.log(exec2Icon);
 
-export function getIcon(proc, fuzzy = false) {
+export function getDescription(proc) {
+    const cmdline = distillCmdline(proc.cmdline).toLowerCase();
+    const comm = parseComm(proc.comm).toLowerCase();
+    const exe = path.basename(proc.exe).toLowerCase();
+    if (!isInterpreter(proc)) {
+        return exec2Description[comm] ?? exec2Description[exe] ?? exec2Description[cmdline];
+    }
+}
+
+export function getIcon(proc, fuzzy=false) {
     if (proc.type === 'service') {
         return "dev.saki.lemon.fallback-service";
     }
     if (proc.type === 'wine') {
         return "dev.saki.lemon.fallback-wine";
     }
-    if (isShell(getDisplayName(proc))) {
-        return "dev.saki.lemon.fallback-terminal";
-    }
-    const cmdline = distillCmdline(proc.cmdline).toLowerCase();
+    const cmdline = getDisplayName(proc).toLowerCase();
     const comm = parseComm(proc.comm).toLowerCase();
     const exe = path.basename(proc.exe).toLowerCase();
     let icon = exec2Icon[comm] ?? exec2Icon[exe] ?? exec2Icon[cmdline];
@@ -77,11 +96,14 @@ export function getIcon(proc, fuzzy = false) {
     if (proc.type === 'gui') {
         return "dev.saki.lemon.fallback-gui";
     }
+    if (proc.isShell) {
+        return "dev.saki.lemon.fallback-terminal";
+    }
     // return "dev.saki.lemon.fallback-unknown";
     return "application-x-executable-symbolic";
 }
 
-const iconCache = {};
+let iconCache = {};
 
 export function getIconURL(proc) {
     let icon;
@@ -91,6 +113,10 @@ export function getIconURL(proc) {
     } else {
         icon = getIcon(proc, proc.type === 'gui');
         iconCache[id] = icon;
+    }
+    if (Object.keys(iconCache).length > 10000) {
+        console.log("icon cache is too large, clearing");
+        iconCache = {};
     }
     if (path.isAbsolute(icon)) {
         return icon;

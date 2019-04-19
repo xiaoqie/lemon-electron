@@ -28,6 +28,8 @@ const store = configureStore({
         netBandwidth: 100 * 1024 * 1024 / 8,
         "knownDaemons": [
             ".*\\.AppImage",  // suffix isn't a reliable way to identify file type
+            "flatpak-dbus-proxy",
+            "bwrap",
             // Ubuntu GNOME:
             "dbus-daemon",
             "dbus-launch",
@@ -60,17 +62,16 @@ const store = configureStore({
         ],
         "spawners": [
             "(gdm3)",
-            "(systemd)"
+            "(systemd)",
         ],
-        "guiSpawners":
-            [
-                "(gnome-shell)"
-            ],
-        "wineApps":
-            [
-                "wine-preloader",
-                "wineserver.real"
-            ]
+        "guiSpawners": [
+            "(gnome-shell)",
+            // "(bwrap)"  // I don't think we can be sure if bwrap wraps a gui app
+        ],
+        "wineApps": [
+            "wine-preloader",
+            "wineserver.real"
+        ]
     }
 });
 

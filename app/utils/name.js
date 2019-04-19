@@ -1,22 +1,22 @@
 import path from 'path';
 
-export function isShell(p) {
-    const shells = ["sh",
-        "bash",
-        "rbash",
-        "dash",
-        "zsh"];
-    return shells.includes(p);
-}
-
 export function parseCommand(cmdline) {
     return cmdline.split(' ');
 }
 
-export function distillCmdline(cmdline) {
+export function isPython(exec: string): boolean {
+    return /^python((\d\.\d)|\d)*$/.test(exec);
+}
+
+export function isInterpreter(proc): boolean {
+    const exe = path.basename(proc.exe);
+    return proc.isShell || isPython(exe) || ['perl'].includes(exe);
+}
+
+export function distillCmdline(cmdline, isShell) {
     const exec = path.basename(parseCommand(cmdline)[0]);
-    if (isShell(exec)) {
-        const args = cmdline.split(' ');
+    const args = cmdline.split(' ');
+    if (isShell) {
         args.shift();
         for (const arg of args) {
             if (arg[0] === '-') {
@@ -25,10 +25,11 @@ export function distillCmdline(cmdline) {
                 break;
             }
         }
-        return distillCmdline(args.join(' '));
+        if (args.join(' ')) {
+            return distillCmdline(args.join(' '));
+        }
     }
     if (['env', 'cross-env'].includes(exec)) {
-        const args = cmdline.split(' ');
         args.shift();
         for (const arg of Object.values(args)) {
             if (arg[0] === '-') {
@@ -45,6 +46,19 @@ export function distillCmdline(cmdline) {
             }
         }
         return distillCmdline(args.join(' '));
+    }
+    if (isPython(exec) || ['perl'].includes(exec)) {
+        args.shift();
+        for (const arg of Object.values(args)) {
+            if (arg[0] === '-') {
+                args.shift();
+            } else {
+                break;
+            }
+        }
+        if (args.join(' ')) {
+            return distillCmdline(args.join(' '));
+        }
     }
     return exec;
 }
@@ -72,13 +86,13 @@ export function getDisplayName(proc) {
     let fromCmdline;
     if (proc.cmdline) {
         if (proc.type !== 'wine') {
-            fromCmdline = distillCmdline(proc.cmdline);
+            fromCmdline = distillCmdline(proc.cmdline, proc.isShell);
         } else {
             fromCmdline = distillCmdlineForWine(proc.cmdline);
         }
     }
     let displayName;
-    if (fromCmdline && fromCmdline.includes(fromComm)) {
+    if (fromCmdline && (fromCmdline.includes(fromComm) || isInterpreter(proc))) {
         displayName = fromCmdline;
     } else {
         displayName = fromComm;

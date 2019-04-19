@@ -2,6 +2,7 @@ import * as path from "path";
 import * as fs from 'fs';
 import {processLog} from "../constants/log-type";
 import {GENERATE_LIST} from "./list";
+import {execSync} from 'child_process';
 
 export const RECEIVE_LOG = "RECEIVE_LOG";
 
@@ -33,15 +34,21 @@ function regexArrayIncludes(regexes, str) {
 }
 
 function process(log, config) {
-    const {sys, processes, users, shells, lsblk} = log;
-    let {systemd_units} = log;
+    const {sys, processes, shells, lsblk} = log;
+    let {systemd_units, users} = log;
 
     const elements = ['name', 'description', 'load', 'active', 'sub', 'following', 'objectPath', 'queued', 'jobType', 'jobObjectPath'];
     systemd_units = Object.assign(...systemd_units.map(u => ({[u[0]]: Object.assign(...u.map((v, i) => ({[elements[i]]: v})))})));
+    users = Object.assign(...users.map(u => ({[u.uid]: u})));
 
+    const isUserService = (service) => service === 'session-4.scope' || service === 'user@1000.service';
     // evaluate information, make process tree
     for (const pid in processes) {
         const p = processes[pid];
+        if (p.state === "Z") { // TODO show zombie process option
+            delete processes[pid];
+            continue;
+        }
         const cgroupList = p.cgroup.split('/');
         if (p.cgroup === '/') {
             p.service = "";
@@ -54,6 +61,8 @@ function process(log, config) {
         p.disk_total = p.disk_read + p.disk_write;
         p.net_total = p.net_send + p.net_receive;
         p.isSpawner = false;
+        p.isShell = shells.includes(p.exe);
+        p.username = users[p.uid]?.name;
 
         if (!p.children) {
             p.children = {};
@@ -73,8 +82,22 @@ function process(log, config) {
     for (const pid in processes) {
         const p = processes[pid];
         const parent = processes[p.ppid];
-        const cgroupList = p.cgroup.split('/');
-        const lastCGroup = cgroupList[cgroupList.length - 1];
+        // const cgroupList = p.cgroup.split('/');
+        // const lastCGroup = cgroupList[cgroupList.length - 1];
+        // const isDaemon = regexArrayIncludes(config.knownDaemons, path.basename(p.exe)) || regexArrayIncludes(config.knownDaemons, p.comm);
+        if (isUserService(p.service)) {
+            p.type = 'user';
+        }
+        if (isUserService(p.service) && !isUserService(parent?.service)) {
+            // p.type = 'gui';
+            p.isGenesis = true;
+            if (parent)
+                delete parent.children[pid];
+        }
+    }
+
+    for (const pid in processes) {
+        const p = processes[pid];
         if (regexArrayIncludes(config.spawners, p.comm)) {
             p.isSpawner = true;
         }
@@ -91,7 +114,7 @@ function process(log, config) {
             }
         }
         if (regexArrayIncludes(config.knownApps, path.basename(p.exe))) {
-            p.type = 'gui';
+            // p.type = 'gui';
             p.isGenesis = true;
             delete processes[p.ppid].children[pid];
         }
@@ -101,21 +124,12 @@ function process(log, config) {
             delete processes[p.ppid].children[pid];
         }
 
-        if (p.type !== 'terminal' && p.type !== 'wine' &&
-            !(
-                regexArrayIncludes(config.knownDaemons, path.basename(p.exe)) ||
-                regexArrayIncludes(config.knownDaemons, p.comm)
-            ) &&
-            (
-                (p.service === 'session-4.scope' && parent?.service !== 'session-4.scope') ||
-                (p.service === 'user@1000.service' && parent?.service !== 'user@1000.service' &&
-                    (lastCGroup === 'dbus.service' || lastCGroup === 'gnome-terminal-server.service')) // TODO better conditioning
-            )) {
-            p.type = 'gui';
-            p.isGenesis = true;
-            if (parent)
-                delete parent.children[pid];
-        }
+        // if (isDaemon) {
+        //     p.type = null;
+        //     p.isGenesis = false;
+        //     if (parent)
+        //         parent.children[pid] = p;
+        // }
     }
 
     // 把spawner的孩子拎出来
@@ -123,23 +137,40 @@ function process(log, config) {
         const p = processes[pid];
         if (p.isSpawner) {
             for (const cpid in p.children) {
-                if (p.children[cpid].state !== "Z") // TODO more zombie detections
-                    p.children[cpid].isGenesis = true;
+                p.children[cpid].isGenesis = true;
             }
             p.children = {};
         }
     }
 
+    for (const line of execSync('wmctrl -lp', {encoding: 'utf-8'}).trim().split('\n')) {
+        const parts = line.trim().split(/\s+/);
+        const pid = parseInt(parts[2], 10);
+        const title = parts.slice(4).join(' ');
+        const p = processes[pid];
+        if (!p) continue;
+        p.window_exists = true;
+        p.window_title = title;
+
+        let parent = p;
+        let i = 0;
+        while (parent && parent.isGenesis === false && i < 10) {
+            parent = processes[parent.ppid];
+            i++;
+        }
+        if (parent) parent.type = 'gui';
+    }
+
+
     // service grouping
     for (const pid in processes) {
         const p = processes[pid];
-        if (p.isGenesis && p.service && p.type !== "gui" && p.type !== "terminal" && p.type !== "wine") {
+        if (p.isGenesis && p.service && systemd_units[p.service] && !isUserService(p.service)) {
             if (!(p.service in processes)) {
                 const dummyProc = processLog();
                 dummyProc.pid = p.service;
                 dummyProc.cmdline = p.service;
-                if (systemd_units[p.service])
-                    dummyProc.comm = systemd_units[p.service].description;
+                dummyProc.description = systemd_units[p.service].description;
                 dummyProc.isGenesis = true;
                 dummyProc.type = 'service';
                 dummyProc.service = p.service;
@@ -153,7 +184,7 @@ function process(log, config) {
     for (const pid in processes) {
         const p = processes[pid];
         if (p.isGenesis && p.type !== 'group') {
-            p.children = flatten(p);
+            // p.children = flatten(p);
         }
     }
     // cumsum
@@ -185,26 +216,23 @@ function process(log, config) {
         }
     }
 
+
+    const newGroup = (name, id) => {
+        const p = processLog();
+        p.cmdline = name;
+        p.type = 'group';
+        p.pid = id;
+        return p;
+    };
+
     // grouping
-    processes.gui = processLog();
-    processes.gui.cmdline = 'Applications';
-    processes.gui.type = 'group';
-    processes.gui.pid = 'gui';
+    processes.gui = newGroup("GUI_Applications", 'gui');
+    processes.terminal = newGroup('Terminals', 'terminal');
+    processes.wine = newGroup('Wine', 'wine');
+    processes.user = newGroup('Processes', 'user');
+    processes.service = newGroup('Services', 'service');
+    processes.other = newGroup('Root_Processes', 'other');
 
-    processes.terminal = processLog();
-    processes.terminal.cmdline = 'Terminals';
-    processes.terminal.type = 'group';
-    processes.terminal.pid = 'terminal';
-
-    processes.wine = processLog();
-    processes.wine.cmdline = 'Wine';
-    processes.wine.type = 'group';
-    processes.wine.pid = 'wine';
-
-    processes.service = processLog();
-    processes.service.cmdline = 'Services';
-    processes.service.type = 'group';
-    processes.service.pid = 'service';
     for (const pid in processes) {
         const p = processes[pid];
         if (p.isGenesis && p.type !== 'group') {
@@ -217,9 +245,15 @@ function process(log, config) {
             } else if (p.type === "wine") {
                 p.isGenesis = false;
                 processes.wine.children[pid] = p;
-            } else {
+            } else if (p.type === 'service') {
                 p.isGenesis = false;
                 processes.service.children[pid] = p;
+            } else if (p.type === 'user') {
+                p.isGenesis = false;
+                processes.user.children[pid] = p;
+            } else {
+                p.isGenesis = false;
+                processes.other.children[pid] = p;
             }
         }
     }
@@ -227,6 +261,8 @@ function process(log, config) {
     processes.wine.isGenesis = true;
     processes.service.isGenesis = true;
     processes.terminal.isGenesis = true;
+    processes.other.isGenesis = true;
+    processes.user.isGenesis = true;
 
     const parentsChildrenDict = {};
     const retrieveChildren = (obj) => {

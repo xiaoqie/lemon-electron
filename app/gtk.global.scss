@@ -214,6 +214,14 @@ input {
 }
 
 .gtk-icon-theme {
+    font-family: 'gtk-icon-theme';
+    font-weight: normal;
+    font-style: normal;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-variant-ligatures: common-ligatures;
+    font-feature-settings: "kern";
+    font-kerning: normal;
     //display: inline-block;
     font-size: 16px;
     line-height: 16px;
@@ -225,8 +233,21 @@ input {
     align-self: center;
 }
 
+.titlebutton.close .gtk-icon-theme::before {
+    content: "window_close_symbolic";
+}
+
+.titlebutton.minimize .gtk-icon-theme::before {
+    content: "window_minimize_symbolic";
+}
+
+.titlebutton.maximize .gtk-icon-theme::before {
+    content: "window_maximize_symbolic";
+}
+
 .switch {
     display: flex;
+    width: 64px;
 
     .slider {
         flex-grow: 0;
@@ -239,13 +260,26 @@ input {
     position: relative;
     display: block;
 
+    .contents {
+        display: flex;
+    }
+
     .slider {
         position: absolute;
     }
 }
 
 .trough {
-    min-height: 2px; // I'm not exactly sure
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.horizontal .trough {
+    min-height: 4px; // I'm not exactly sure
+}
+.vertical .trough {
+    min-width: 4px; // I'm not exactly sure
 }
 
 .full-width {
@@ -272,10 +306,22 @@ input.disabled {
 }
 
 .menu .menuitem .pre-label,
-.menu .menuitem .after-label
-{  // not written in gtk theme?
+.menu .menuitem .after-label { // not written in gtk theme?
     min-width: 16px;
     width: 16px;
     min-height: 1px;
     padding: inherit;
+}
+
+* {
+    user-select: none !important;
+    outline: none !important;
+}
+
+*:not(:active) {
+    outline: none !important;
+}
+
+a {
+    cursor: pointer;
 }

@@ -1,7 +1,7 @@
-import loadTheme from '../gluino'
 import {spawn} from 'child_process';
 import {remote} from 'electron';
 import * as path from 'path';
+import loadTheme from '../gluino'
 
 
 let theme;
@@ -9,7 +9,6 @@ const listeners = [];
 
 async function load(reloadIcon = false) {
     theme = await loadTheme({
-        dataDir: `${__dirname}/gtk/`,
         outputDir: path.join(remote.app.getPath('appData'), 'lemon-electron'),
         iconCache: reloadIcon ? null : {iconMap: theme?.iconMap, glyphMap: theme?.glyphMap}
     });
@@ -44,7 +43,11 @@ export function closeListeners() {
 
 load(true);
 listen("gsettings", ["monitor", "org.gnome.desktop.interface", "gtk-theme"]);
-listen("gsettings", ["monitor", "org.gnome.desktop.interface", "font-name"]);
-listen("gsettings", ["monitor", "org.gnome.desktop.interface", "icon-theme"], true);
+// listen("gsettings", ["monitor", "org.gnome.desktop.interface", "font-name"]);
+// listen("gsettings", ["monitor", "org.gnome.desktop.interface", "icon-theme"], true);
+
+window.onbeforeunload = e => {
+    closeListeners();
+};
 
 export default () => theme;

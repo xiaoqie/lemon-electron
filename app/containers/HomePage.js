@@ -1,8 +1,9 @@
 // @flow
 import React, { Component } from 'react';
-import Home from '../components/Window';
 import {connect} from 'react-redux';
+import Window from '../components/Window';
 import gtkTheme from '../utils/import-gtk-theme'
+import GtkWidgetFactory from "../components/GtkWidgetFactory";
 
 type Props = {log: any};
 
@@ -20,7 +21,8 @@ class HomePage extends Component<Props> {
     if (!processes) {
       return (<div className="loading">Connecting...</div>);
     }
-    return <Home />;
+    // return <GtkWidgetFactory/>;
+    return <Window/>;
   }
 }
 export default connect(state => ({

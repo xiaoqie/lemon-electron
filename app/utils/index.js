@@ -16,11 +16,11 @@ export function C(...classNames) {
 
 export function moveMenuWindowTo(window, {x, y}) {
     const $ = require('jquery');
-    const menu = window.find(".menu");
+    const menu = $(window).find(".menu");
     const maxX = Math.max(0, $(document).outerWidth() - $(menu).outerWidth() - 32);
     const maxY = Math.max(0, $(document).outerHeight() - $(menu).outerHeight() - 32);
 
-    window.css({
+    $(window).css({
         "top": Math.min(maxY, y - (menu.outerHeight(true) - menu.outerHeight()) / 2),
         "left": Math.min(maxX, x - (menu.outerWidth(true) - menu.outerWidth()) / 2)
     });

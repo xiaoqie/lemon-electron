@@ -47,6 +47,9 @@ export default function list(state={listItems: [], sort: {}, layout: {}, current
                 expanded = expanded.filter(p => p !== pid);
             } else {
                 expanded.push(pid);
+                for (const cpid of allState.log.parentsChildrenDict[pid].children) {
+                    expanded.push(parseInt(cpid, 10));
+                }
             }
             return {
                 ...state,

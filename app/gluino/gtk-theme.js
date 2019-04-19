@@ -81,9 +81,9 @@ async function generateIconFont(svgs, output) {
     await onFinish();
     console.log('SVG Font successfully created!');
     const ttf = svg2ttf(fs.readFileSync(`${output}.svg`, 'utf8'), {});
-    fs.writeFileSync(`${output}.ttf`, new Buffer(ttf.buffer));
+    fs.writeFileSync(`${output}.ttf`, Buffer.from(ttf.buffer));
     console.log('TTF Font successfully created!');
-    // const woff = new Buffer(ttf2woff(new Uint8Array(fs.readFileSync(`${output}.ttf`)), {}).buffer);
+    // const woff = Buffer.from(ttf2woff(new Uint8Array(fs.readFileSync(`${output}.ttf`)), {}).buffer);
     // fs.writeFileSync(`${output}.woff`, woff);
     // console.log('WOFF Font successfully created!');
 }
@@ -127,7 +127,9 @@ function getFont() {
 }
 
 export default async function getTheme(config) {
-    const {dataDir, outputDir} = config;
+    const {outputDir} = config;
+    const dataDir = `${__dirname}/gluino/gtk/`;
+    config.dataDir = dataDir;
     const environment = await desktopEnv();
     let schema: string;
     if (environment === 'Cinnamon') {
@@ -238,10 +240,6 @@ export default async function getTheme(config) {
             }
         }
 
-        if (r === 0) {
-            cssString += '* {outline: none !important; user-select: none !important;} a {cursor: pointer;}';
-        }
-
         return cssString;
     };
 
@@ -254,28 +252,6 @@ export default async function getTheme(config) {
     src: url('${path.join(outputDir, 'gtk_icon_font.ttf')}') format('truetype');
     font-weight: normal;
     font-style: normal;
-}
-.gtk-icon-theme {
-    font-family: 'gtk-icon-theme';
-    font-weight: normal;
-    font-style: normal;
-    
-    /* Support for all WebKit browsers. */
-    -webkit-font-smoothing: antialiased;
-    /* Support for Safari and Chrome. */
-    text-rendering: optimizeLegibility;
-    font-variant-ligatures: common-ligatures;
-    font-feature-settings: "kern";
-    font-kerning: normal;
-}
-.titlebutton.close .gtk-icon-theme::before {
-    content: "window_close_symbolic";
-}
-.titlebutton.minimize .gtk-icon-theme::before {
-    content: "window_minimize_symbolic";
-}
-.titlebutton.maximize .gtk-icon-theme::before {
-    content: "window_maximize_symbolic";
 }
 * {
     font-family: '${font.font}', sans-serif;

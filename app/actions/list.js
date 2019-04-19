@@ -65,22 +65,28 @@ export function generateList(processes, sort, expanded) {
             item.cmdline = process.cmdline;
             item.icon = gnome.getIconURL(process);
             item.name = getDisplayName(process);
-            if (process.type === 'terminal') {
-                item.name += ` [@.../${path.basename(process.cwd)}]`
-            }
             item.pid = process.pid;
             item.selectable = process.type !== 'group';
             if (process.type !== 'group') {
                 item.collapsable = Object.keys(process.children).length !== 0;
                 if (process.type !== 'service') {
                     item.displayPid = process.pid;
+                } else {
+                    item.description = process.description;
                 }
-                item.cpu = `${(process.cpu_usage / 4 * 100.0).toFixed(0)}%`;
+                if (process.type === 'gui') {
+                    item.description = gnome.getDescription(process);
+                }
+                if (process.type === 'terminal') {
+                    item.name += ` [@.../${path.basename(process.cwd)}]`
+                }
+                item.username = process.username;
+                item.cpu = `${(process.cpu_usage / 4 * 100.0).toFixed(0)}%`; // FIXME count cpu cores
                 item.mem = formatBytes(process.mem, 1);
-                item.disk = `${formatBytes(process.disk_total * 1024, 1)}/s`;
-                item.net = `${formatBytes(process.net_total * 1024, 1)}/s`;
-                item.gpu = `${(process.gpu_usage_total).toFixed(0)}%`;
-                item.vram = formatBytes(process.gpu_memory_used * 1024 * 1024, 1);
+                item.disk = `${formatBytes(process.disk_total, 1)}/s`;
+                item.net = `${formatBytes(process.net_total, 1)}/s`;
+                item.gpu = `${(process.gpu_usage_total * 100).toFixed(0)}%`;
+                item.vram = formatBytes(process.gpu_memory_used, 1);
             } else {
                 item.icon = 'none';
                 item.depth += 1;

@@ -135,7 +135,8 @@ class ListItem extends Component<Props> {
                                 }}
                                 {item.icon !== 'none' && <img src={item.icon} alt="" className={styles.icon}/>}
                                 <span className={styles.inlineLeft} title={item.cmdline}>
-                                    {item.name}
+                                    {item.username && `[${item.username}] `}
+                                    {item.description ?? item.name}
                                     {/*{item.type === 'terminal' && ` [@.../${path.basename(item.cwd)}]`}*/}
                                 </span>
                             </div>
