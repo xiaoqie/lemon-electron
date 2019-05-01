@@ -66,16 +66,16 @@ export default class ScrollbarBase extends Component<Props> {
         if (contentHeight !== this.mContentHeight || viewportHeight !== this.mViewportHeight) {
             const slider = $(this.slider.current);
             const scrollbar = $(this.scrollbar.current);
-            const sliderPosition = parseInt(slider.css("top"), 10);
-            const sliderTopOriginal = sliderPosition / (scrollbar.outerHeight(true) - slider.outerHeight(true)) * (this.mContentHeight - this.mViewportHeight);
+            const sliderPosition = parseFloat(slider.css("top"));
+            const sliderTopOriginal = sliderPosition / (scrollbar.outerHeight() - slider.outerHeight()) * (this.mContentHeight - this.mViewportHeight);
 
             this.mContentHeight = contentHeight;
             this.mViewportHeight = viewportHeight;
             this.updateSliderSize();
 
-            const sliderTopNew = sliderTopOriginal * (scrollbar.outerHeight(true) - slider.outerHeight(true)) / (this.mContentHeight - this.mViewportHeight);
+            const sliderTopNew = sliderTopOriginal * (scrollbar.outerHeight() - slider.outerHeight()) / (this.mContentHeight - this.mViewportHeight);
             slider.css({
-                "top": clamp(sliderTopNew, 0, scrollbar.outerHeight(true) - slider.outerHeight(true))
+                "top": clamp(sliderTopNew, 0, scrollbar.outerHeight() - slider.outerHeight())
             });
             this.fireScrollEvent();
         }
@@ -100,7 +100,7 @@ export default class ScrollbarBase extends Component<Props> {
     updateSliderSize() {
         const slider = $(this.slider.current);
         const scrollbar = $(this.scrollbar.current);
-        slider.css("height", this.viewportHeight / (this.contentHeight) * scrollbar.outerHeight(true));
+        slider.css("height", this.viewportHeight / (this.contentHeight) * scrollbar.outerHeight());
     }
 
     onMouseMove(e) {
@@ -110,7 +110,7 @@ export default class ScrollbarBase extends Component<Props> {
             "top": clamp(
                 this.sliderPositionOnMouseDown.y + e.clientY - this.mouseDownPosition.y,
                 0,
-                scrollbar.outerHeight(true) - slider.outerHeight(true)
+                scrollbar.outerHeight() - slider.outerHeight()
             )
         });
         this.fireScrollEvent();
@@ -120,8 +120,8 @@ export default class ScrollbarBase extends Component<Props> {
         this.mouseDownPosition = {x: e.clientX, y: e.clientY};
         const slider = $(this.slider.current);
         this.sliderPositionOnMouseDown = {
-            x: parseInt(slider.css("left"), 10),
-            y: parseInt(slider.css("top"), 10)
+            x: parseFloat(slider.css("left")),
+            y: parseFloat(slider.css("top"))
         };
         document.addEventListener('mousemove', this.onMouseMove);
 
@@ -146,13 +146,12 @@ export default class ScrollbarBase extends Component<Props> {
     onWheel(delta: number) {
         const slider = $(this.slider.current);
         const scrollbar = $(this.scrollbar.current);
-        const sliderPosition = parseInt(slider.css("top"), 10);
-        const clamp = (number, min, max) => Math.max(min, Math.min(number, max));
+        const sliderPosition = parseFloat(slider.css("top"));
         slider.css({
             "top": clamp(
-                sliderPosition + delta * (scrollbar.outerHeight(true) - slider.outerHeight(true)) / (this.contentHeight - this.viewportHeight),
+                sliderPosition + delta * (scrollbar.outerHeight() - slider.outerHeight()) / (this.contentHeight - this.viewportHeight),
                 0,
-                scrollbar.outerHeight(true) - slider.outerHeight(true)
+                scrollbar.outerHeight() - slider.outerHeight()
             )
         });
         this.fireScrollEvent();
@@ -162,8 +161,8 @@ export default class ScrollbarBase extends Component<Props> {
         const {onScroll} = this.props;
         const slider = $(this.slider.current);
         const scrollbar = $(this.scrollbar.current);
-        const sliderPosition = parseInt(slider.css("top"), 10);
-        onScroll?.(sliderPosition / (scrollbar.outerHeight(true) - slider.outerHeight(true)) * (this.contentHeight - this.viewportHeight));
+        const sliderPosition = parseFloat(slider.css("top"));
+        onScroll?.(sliderPosition / (scrollbar.outerHeight() - slider.outerHeight()) * (this.contentHeight - this.viewportHeight));
     }
 
     render() {

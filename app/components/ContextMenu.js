@@ -28,14 +28,14 @@ class ContextMenu extends Component<Props> {
 
     componentDidMount(): void {
         window.addEventListener('contextmenu', this.onContextMenu);
-        window.addEventListener('click', this.onClick);
+        window.addEventListener('mouseup', this.onClick);
         window.addEventListener("wheel", this.onWheel);
         window.addEventListener('mousedown', this.onMouseDown);
     }
 
     componentWillUnmount(): void {
         window.removeEventListener('contextmenu', this.onContextMenu);
-        window.removeEventListener('click', this.onClick);
+        window.removeEventListener('mouseup', this.onClick);
         window.removeEventListener("wheel", this.onWheel);
         window.removeEventListener('mousedown', this.onMouseDown);
     }

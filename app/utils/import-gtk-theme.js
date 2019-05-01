@@ -1,17 +1,20 @@
 import {spawn} from 'child_process';
 import {remote} from 'electron';
 import * as path from 'path';
-import loadTheme from '../gluino'
+import sunset from 'sunset-core';
 
 
 let theme;
 const listeners = [];
 
 async function load(reloadIcon = false) {
-    theme = await loadTheme({
+/*    theme = await loadTheme({
         outputDir: path.join(remote.app.getPath('appData'), 'lemon-electron'),
         iconCache: reloadIcon ? null : {iconMap: theme?.iconMap, glyphMap: theme?.glyphMap}
-    });
+    });*/
+    theme = await sunset.load(path.join(remote.app.getPath('appData'), 'lemon-electron'),
+        reloadIcon ? null : {iconMap: theme?.iconMap, glyphMap: theme?.glyphMap});
+    sunset.inject(theme);
 }
 
 function listen(exe, args, reloadIcon = false) {

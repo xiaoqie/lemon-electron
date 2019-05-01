@@ -13,7 +13,10 @@
 import {app, BrowserWindow} from 'electron';
 import {autoUpdater} from 'electron-updater';
 import log from 'electron-log';
+import WebSocket from "ws";
 import MenuBuilder from './menu';
+import initialState from './constants/initial-state';
+import * as LogAction from "./actions/log";
 
 app.commandLine.appendSwitch('js-flags', '--expose_gc');
 
@@ -61,7 +64,6 @@ app.on('window-all-closed', () => {
     }
 });
 
-
 async function createWindow() {
     if (
         process.env.NODE_ENV === 'development' ||
@@ -108,25 +110,43 @@ async function createWindow() {
 }
 
 function _createWindowTransparent() {
-    let parent = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         icon: `${__dirname}/dist/icons/64x64.png`,
         width: 1024,
         height: 768,
         transparent: true,
-        frame: false
+        frame: false,
+        webPreferences: {
+            experimentalFeatures: true
+        }
+        // resizable: false
     });
 
-    parent.once('close', () => {
-        parent = null;
+    mainWindow.once('close', () => {
+        mainWindow = null;
     });
 
-    parent.loadURL(`file://${__dirname}/app.html`);
+    mainWindow.loadURL(`file://${__dirname}/app.html`);
     if (process.env.DEBUG_PROD === 'true') {
-        parent.webContents.openDevTools();
+        mainWindow.webContents.openDevTools();
     }
 }
 
 const createWindowTransparent = () => setTimeout(_createWindowTransparent, 500);
 
 app.on('ready', createWindowTransparent);
-// app.on('ready', createWindow);
+
+/*
+const port = 8089;
+const ws = new WebSocket(`ws://127.0.0.1:${port}`);
+
+ws.on('open', () => {
+    ws.send('something');
+});
+
+ws.on('message', (data) => {
+    const syslog = JSON.parse(data);
+    mainWindow?.webContents.send("log", LogAction.process(syslog, initialState.config));
+});
+*/
+

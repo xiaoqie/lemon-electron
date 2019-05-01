@@ -1,5 +1,6 @@
 import * as path from 'path';
-import type { GetState, Dispatch } from '../reducers/types';
+import os from 'os';
+import { GetState, Dispatch } from '../reducers/types';
 import {getDisplayName} from "../utils/name";
 import {formatBytes, stringCompare} from "../utils";
 import * as gnome from "../utils/gnome";
@@ -13,6 +14,7 @@ export const LIST_VIEWPORT_RESIZE = "LIST_VIEWPORT_RESIE"
 
 export function generateList(processes, sort, expanded) {
     if (!processes) return [];
+    const currentUid = os.userInfo().uid;
     const listItems = [];
     const {col, reverse} = sort;
     const appendList = (items, depth=0) => {
@@ -20,7 +22,7 @@ export function generateList(processes, sort, expanded) {
         if (Object.keys(items).length === 0) {
             return;
         }
-        if (items[pids[0]].type !== 'group') {
+        if (items[pids[0]].type !== 'group' || sort !== "name") {
             switch (col) {
                 case "name":
                     pids = pids.sort((pid1, pid2) =>
@@ -64,7 +66,11 @@ export function generateList(processes, sort, expanded) {
             item.depth = depth  - 1;
             item.cmdline = process.cmdline;
             item.icon = gnome.getIconURL(process);
-            item.name = getDisplayName(process);
+            if (process.type !== 'group') {
+                item.name = getDisplayName(process);
+            } else {
+                item.name = process.cmdline;
+            }
             item.pid = process.pid;
             item.selectable = process.type !== 'group';
             if (process.type !== 'group') {
@@ -80,7 +86,9 @@ export function generateList(processes, sort, expanded) {
                 if (process.type === 'terminal') {
                     item.name += ` [@.../${path.basename(process.cwd)}]`
                 }
-                item.username = process.username;
+                if (process.uid !== currentUid) {
+                    item.username = process.username;
+                }
                 item.cpu = `${(process.cpu_usage / 4 * 100.0).toFixed(0)}%`; // FIXME count cpu cores
                 item.mem = formatBytes(process.mem, 1);
                 item.disk = `${formatBytes(process.disk_total, 1)}/s`;
@@ -174,4 +182,4 @@ export const listViewportResize = height => (dispatch: Dispatch) => {
         type: LIST_VIEWPORT_RESIZE,
         payload: height
     })
-}
+};

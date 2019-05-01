@@ -12,6 +12,7 @@ import ContextMenu from "./ContextMenu";
 import GtkWidgetFactory from "./GtkWidgetFactory";
 import ScrollbarBase from "./ScrollbarBase";
 import * as ListAction from "../actions/list";
+import Sunset from "sunset-react";
 
 
 type Props = {
@@ -63,6 +64,7 @@ class Window extends Component<Props> {
     constructor() {
         super();
         this.list = React.createRef();
+        this.browserWindow = remote.getCurrentWindow();
     }
 
     componentDidMount() {
@@ -115,45 +117,51 @@ class Window extends Component<Props> {
     render() {
         const {list, listScroll} = this.props;
         return (
-            <div className={C(styles.container, "main-window", "window", "background", "decoration", "csd")}>
+            <React.Fragment>
                 <ContextMenu/>
-                <div className="header-bar headerbar titlebar">
-                    <div className="title-center title label">Lemonitor</div>
-                    <div className="grid box horizontal title-right spacing-6">
-                        <div id="window-minimize" className="titlebutton button minimize" onClick={this.minimizeWindow}>
-                            <i className="gtk-icon-theme"/>
-                        </div>
-                        <div id="window-maximize" className="titlebutton button maximize" onClick={this.maximizeWindow}>
-                            <i className="gtk-icon-theme"/>
-                        </div>
-                        <div id="window-close" className="titlebutton button close" onClick={this.closeWindow}>
-                            <i className="gtk-icon-theme"/>
-                        </div>
-                    </div>
-                </div>
-                <div className={C("searchbar", styles.searchbar)}>
-                    <div className="revealer">
-                        <div className="box center-item">
-                            <input placeholder="search" className=""/>
+                <Sunset.Window remote={remote}>
+                    <div className="header-bar headerbar titlebar">
+                        <div className="title-center title label">Peak System Monitor</div>
+                        <div className="grid box horizontal title-right spacing-6">
+                            <div id="window-minimize" className="titlebutton button minimize"
+                                 onClick={this.minimizeWindow}>
+                                <i className="gtk-icon-theme"/>
+                            </div>
+                            <div id="window-maximize" className="titlebutton button maximize"
+                                 onClick={this.maximizeWindow}>
+                                <i className="gtk-icon-theme"/>
+                            </div>
+                            <div id="window-close" className="titlebutton button close" onClick={this.closeWindow}>
+                                <i className="gtk-icon-theme"/>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div className={C("scrolledwindow", styles.scrolledwindow)}>
-                    <div className={C("treeview", "view", styles.treeview)}>
-                        <div className={C(styles.header, "header")}>
-                            <ListHeader/>
+                    <div style={{display: "grid", gridTemplateRows: "0 minmax(0, 1fr)"}}>
+                        <div className={C("searchbar", styles.searchbar)}>
+                            <div className="revealer">
+                                <div className="box center-item">
+                                    <input placeholder="search" className=""/>
+                                </div>
+                            </div>
                         </div>
-                        <div ref={this.list} className={C(styles.list, "background")}>
-                            <List height={list.viewportHeight}/>
+                        <div className={C("scrolledwindow", styles.scrolledwindow)}>
+                            <div className={C("treeview", "view", styles.treeview)}>
+                                <div className={C(styles.header, "header")}>
+                                    <ListHeader/>
+                                </div>
+                                <div ref={this.list} className={C(styles.list, "background")}>
+                                    <List height={list.viewportHeight}/>
+                                </div>
+                            </div>
+                            <Scrollbar ref={this.scrollbar}
+                                       contentHeight={list.listItems.length * 32} // FIXME: what if not 32?
+                                       viewportHeight={list.viewportHeight}
+                                       target={this.list}
+                                       onScroll={e => listScroll(e)}/>
                         </div>
                     </div>
-                    <Scrollbar ref={this.scrollbar}
-                               contentHeight={list.listItems.length * 32} // FIXME: what if not 32?
-                               viewportHeight={list.viewportHeight}
-                               target={this.list}
-                               onScroll={e => listScroll(e)}/>
-                </div>
-            </div>
+                </Sunset.Window>
+            </React.Fragment>
         );
     }
 }
